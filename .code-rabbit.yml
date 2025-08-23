@@ -108,3 +108,34 @@ review_template:
     - "テスト"
     - "ドキュメント"
     - "その他の推奨事項"
+
+# 日本語レビューを確実に有効にする追加設定
+settings:
+  # レビュー言語の強制設定
+  force_language: "ja"
+  
+  # レビューコメントの言語
+  comment_language: "ja"
+  
+  # レビューレポートの言語
+  report_language: "ja"
+  
+  # 日本語でのフィードバック
+  feedback_language: "ja"
+
+# CodeRabbit固有の設定
+code_rabbit:
+  # レビュー言語の設定
+  review_language: "ja"
+  
+  # コメント言語の設定
+  comment_language: "ja"
+  
+  # フィードバック言語の設定
+  feedback_language: "ja"
+  
+  # 日本語でのレビューを強制
+  force_japanese: true
+  
+  # レビューテンプレートの言語
+  template_language: "ja"
