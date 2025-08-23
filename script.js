@@ -49,6 +49,10 @@ let currentSection = 'dashboard';
 let selectedLabels = [];
 let selectedReviewers = [];
 
+// 検索履歴
+let searchHistory = [];
+let isDarkMode = false;
+
 // DOM要素の取得
 const navLinks = document.querySelectorAll('.nav-link');
 const sections = document.querySelectorAll('.section');
@@ -60,6 +64,14 @@ const ratingStars = document.querySelectorAll('.star');
 const createPRForm = document.getElementById('create-pr-form');
 const labelTags = document.querySelectorAll('.label-tag');
 const reviewerTags = document.querySelectorAll('.reviewer-tag');
+const themeToggle = document.getElementById('theme-toggle');
+const modal = document.getElementById('pr-modal');
+const modalContent = document.getElementById('modal-content');
+const closeModal = document.querySelector('.close');
+const exportBtn = document.getElementById('export-btn');
+const clearSearchBtn = document.getElementById('clear-search-btn');
+const progressBar = document.getElementById('progress-bar');
+const progressFill = document.querySelector('.progress-fill');
 
 // ナビゲーション機能
 navLinks.forEach(link => {
@@ -136,7 +148,16 @@ if (statusFilter) {
 }
 
 if (searchInput) {
-    searchInput.addEventListener('input', filterPRs);
+    searchInput.addEventListener('input', (e) => {
+        filterPRs();
+        updateSearchHistory(e.target.value);
+    });
+    
+    // 検索履歴の表示
+    searchInput.addEventListener('focus', showSearchHistory);
+    searchInput.addEventListener('blur', () => {
+        setTimeout(hideSearchHistory, 200);
+    });
 }
 
 function filterPRs() {
@@ -180,8 +201,37 @@ function reviewPR(prId) {
 function viewPR(prId) {
     const pr = samplePRs.find(p => p.id === prId);
     if (pr) {
-        alert(`PR #${pr.id}: ${pr.title}\n作成者: ${pr.author}\nステータス: ${getStatusText(pr.status)}\n説明: ${pr.description}`);
+        showPRModal(pr);
     }
+}
+
+// PR詳細モーダル表示
+function showPRModal(pr) {
+    modalContent.innerHTML = `
+        <h2>PR #${pr.id}: ${pr.title}</h2>
+        <div class="pr-details">
+            <p><strong>作成者:</strong> ${pr.author}</p>
+            <p><strong>ステータス:</strong> <span class="status-badge status-${pr.status}">${getStatusText(pr.status)}</span></p>
+            <p><strong>作成日:</strong> ${pr.createdAt}</p>
+            <p><strong>説明:</strong></p>
+            <div class="pr-description">${pr.description}</div>
+            ${pr.branch ? `<p><strong>ブランチ:</strong> ${pr.branch}</p>` : ''}
+            ${pr.type ? `<p><strong>タイプ:</strong> ${pr.type}</p>` : ''}
+            ${pr.priority ? `<p><strong>優先度:</strong> ${pr.priority}</p>` : ''}
+            ${pr.labels && pr.labels.length > 0 ? `<p><strong>ラベル:</strong> ${pr.labels.join(', ')}</p>` : ''}
+            ${pr.reviewers && pr.reviewers.length > 0 ? `<p><strong>レビュアー:</strong> ${pr.reviewers.join(', ')}</p>` : ''}
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-primary" onclick="reviewPR(${pr.id}); closePRModal();">レビュー開始</button>
+            <button class="btn btn-secondary" onclick="closePRModal()">閉じる</button>
+        </div>
+    `;
+    modal.style.display = 'block';
+}
+
+// モーダルを閉じる
+function closePRModal() {
+    modal.style.display = 'none';
 }
 
 // レビューフォームの処理
@@ -440,6 +490,22 @@ document.addEventListener('DOMContentLoaded', () => {
     // デフォルトでダッシュボードを表示
     showSection('dashboard');
     
+    // テーマの復元
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        toggleTheme();
+    }
+    
+    // 検索履歴の復元
+    const savedHistory = localStorage.getItem('searchHistory');
+    if (savedHistory) {
+        try {
+            searchHistory = JSON.parse(savedHistory);
+        } catch (e) {
+            console.error('検索履歴の復元に失敗しました:', e);
+        }
+    }
+    
     // 下書きがあれば復元
     const draft = localStorage.getItem('prDraft');
     if (draft) {
@@ -583,3 +649,194 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// 新しい機能の関数群
+function setupEventListeners() {
+    // テーマ切り替え
+    if (themeToggle) {
+        themeToggle.addEventListener('click', toggleTheme);
+    }
+    
+    // モーダル関連
+    if (closeModal) {
+        closeModal.addEventListener('click', closePRModal);
+    }
+    
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closePRModal();
+            }
+        });
+    }
+    
+    // エクスポート機能
+    if (exportBtn) {
+        exportBtn.addEventListener('click', exportPRData);
+    }
+    
+    // 検索クリア
+    if (clearSearchBtn) {
+        clearSearchBtn.addEventListener('click', clearSearch);
+    }
+}
+
+// テーマ切り替え
+function toggleTheme() {
+    isDarkMode = !isDarkMode;
+    document.body.classList.toggle('dark-mode', isDarkMode);
+    
+    // アイコンの更新
+    const themeIcon = themeToggle.querySelector('.theme-icon');
+    if (isDarkMode) {
+        themeIcon.textContent = '☀️';
+        localStorage.setItem('theme', 'dark');
+    } else {
+        themeIcon.textContent = '🌙';
+        localStorage.setItem('theme', 'light');
+    }
+}
+
+// データエクスポート
+function exportPRData() {
+    const currentPRs = getCurrentFilteredPRs();
+    const csvContent = convertToCSV(currentPRs);
+    downloadCSV(csvContent, 'pr-data.csv');
+    showNotification('データがエクスポートされました！', 'success');
+}
+
+// 現在のフィルタリングされたPRを取得
+function getCurrentFilteredPRs() {
+    const statusValue = statusFilter.value;
+    const searchValue = searchInput.value.toLowerCase();
+    
+    let filteredPRs = samplePRs;
+    
+    if (statusValue && statusValue !== 'all') {
+        filteredPRs = filteredPRs.filter(pr => pr.status === statusValue);
+    }
+    
+    if (searchValue) {
+        filteredPRs = filteredPRs.filter(pr => 
+            pr.title.toLowerCase().includes(searchValue) ||
+            pr.description.toLowerCase().includes(searchValue) ||
+            pr.author.toLowerCase().includes(searchValue)
+        );
+    }
+    
+    return filteredPRs;
+}
+
+// CSV変換
+function convertToCSV(data) {
+    const headers = ['ID', 'タイトル', '作成者', 'ステータス', '作成日', '説明'];
+    const csvRows = [headers.join(',')];
+    
+    data.forEach(pr => {
+        const row = [
+            pr.id,
+            `"${pr.title}"`,
+            pr.author,
+            getStatusText(pr.status),
+            pr.createdAt,
+            `"${pr.description}"`
+        ];
+        csvRows.push(row.join(','));
+    });
+    
+    return csvRows.join('\n');
+}
+
+// CSVダウンロード
+function downloadCSV(content, filename) {
+    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// 検索クリア
+function clearSearch() {
+    if (searchInput) {
+        searchInput.value = '';
+    }
+    if (statusFilter) {
+        statusFilter.value = 'all';
+    }
+    filterPRs();
+    showNotification('検索条件がクリアされました', 'info');
+}
+
+// 検索履歴の更新
+function updateSearchHistory(query) {
+    if (query.trim() && !searchHistory.includes(query)) {
+        searchHistory.unshift(query);
+        if (searchHistory.length > 10) {
+            searchHistory.pop();
+        }
+        localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
+    }
+}
+
+// 検索履歴の表示
+function showSearchHistory() {
+    if (searchHistory.length === 0) return;
+    
+    let historyContainer = document.querySelector('.search-history');
+    if (!historyContainer) {
+        historyContainer = document.createElement('div');
+        historyContainer.className = 'search-history';
+        searchInput.parentNode.appendChild(historyContainer);
+    }
+    
+    historyContainer.innerHTML = searchHistory.map(query => 
+        `<div class="search-history-item" onclick="selectSearchHistory('${query}')">${query}</div>`
+    ).join('');
+}
+
+// 検索履歴の選択
+function selectSearchHistory(query) {
+    searchInput.value = query;
+    filterPRs();
+    hideSearchHistory();
+}
+
+// 検索履歴の非表示
+function hideSearchHistory() {
+    const historyContainer = document.querySelector('.search-history');
+    if (historyContainer) {
+        historyContainer.remove();
+    }
+}
+
+// 進捗バーの初期化
+function initProgressBar() {
+    if (progressBar && progressFill) {
+        // ページ読み込み時の進捗
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += Math.random() * 15;
+            if (progress > 90) {
+                progress = 90;
+                clearInterval(interval);
+            }
+            progressFill.style.width = progress + '%';
+        }, 100);
+        
+        // ページ読み込み完了時に100%にする
+        window.addEventListener('load', () => {
+            progressFill.style.width = '100%';
+            setTimeout(() => {
+                progressBar.style.opacity = '0';
+                setTimeout(() => {
+                    progressBar.style.display = 'none';
+                }, 300);
+            }, 500);
+        });
+    }
+}

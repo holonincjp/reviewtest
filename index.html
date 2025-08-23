@@ -19,6 +19,9 @@
                 <a href="#create-pr" class="nav-link" data-section="create-pr">PR作成</a>
                 <a href="#review-form" class="nav-link" data-section="review-form">レビューフォーム</a>
             </nav>
+            <button id="theme-toggle" class="theme-toggle" aria-label="テーマ切り替え">
+                <span class="theme-icon">🌙</span>
+            </button>
         </div>
     </header>
 
@@ -62,6 +65,8 @@
                         <option value="rejected">却下</option>
                     </select>
                     <input type="text" id="search-input" placeholder="PRタイトルで検索...">
+                    <button id="export-btn" class="btn btn-secondary">エクスポート</button>
+                    <button id="clear-search-btn" class="btn btn-outline">検索クリア</button>
                 </div>
                 <div class="pr-table">
                     <table>
@@ -207,6 +212,19 @@
             </section>
         </div>
     </main>
+
+    <!-- PR詳細モーダル -->
+    <div id="pr-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="modal-content"></div>
+        </div>
+    </div>
+
+    <!-- 進捗バー -->
+    <div id="progress-bar" class="progress-bar">
+        <div class="progress-fill"></div>
+    </div>
 
     <footer class="footer">
         <div class="container">
