@@ -245,6 +245,15 @@ ratingStars.forEach(star => {
     star.addEventListener('mouseleave', () => {
         highlightStars(selectedRating);
     });
+    
+    // キーボードアクセシビリティの追加
+    star.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            const rating = parseInt(star.getAttribute('data-rating'));
+            setRating(rating);
+        }
+    });
 });
 
 function setRating(rating) {
@@ -467,6 +476,18 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('下書きの復元に失敗しました:', e);
         }
     }
+    
+    // エラーハンドリングの追加
+    window.addEventListener('error', (e) => {
+        console.error('JavaScriptエラーが発生しました:', e.error);
+        showNotification('エラーが発生しました。コンソールを確認してください。', 'error');
+    });
+    
+    // 未処理のPromise拒否のハンドリング
+    window.addEventListener('unhandledrejection', (e) => {
+        console.error('未処理のPromise拒否:', e.reason);
+        showNotification('予期しないエラーが発生しました。', 'error');
+    });
 });
 
 // キーボードショートカット
@@ -505,7 +526,7 @@ function updateActiveNav(sectionName) {
     }
 }
 
-// 通知機能（オプション）
+// 通知機能
 function showNotification(message, type = 'info') {
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
@@ -522,6 +543,7 @@ function showNotification(message, type = 'info') {
         font-weight: 600;
         z-index: 1000;
         animation: slideIn 0.3s ease-out;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     `;
     
     // タイプ別の色
@@ -533,6 +555,10 @@ function showNotification(message, type = 'info') {
     };
     
     notification.style.backgroundColor = colors[type] || colors.info;
+    
+    // アクセシビリティの改善
+    notification.setAttribute('role', 'alert');
+    notification.setAttribute('aria-live', 'polite');
     
     document.body.appendChild(notification);
     
