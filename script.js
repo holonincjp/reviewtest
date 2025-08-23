@@ -45,6 +45,10 @@ const samplePRs = [
 // 現在のセクションを管理
 let currentSection = 'dashboard';
 
+// 選択されたラベルとレビュアー
+let selectedLabels = [];
+let selectedReviewers = [];
+
 // DOM要素の取得
 const navLinks = document.querySelectorAll('.nav-link');
 const sections = document.querySelectorAll('.section');
@@ -53,6 +57,9 @@ const statusFilter = document.getElementById('status-filter');
 const searchInput = document.getElementById('search-input');
 const reviewForm = document.getElementById('review-form-element');
 const ratingStars = document.querySelectorAll('.star');
+const createPRForm = document.getElementById('create-pr-form');
+const labelTags = document.querySelectorAll('.label-tag');
+const reviewerTags = document.querySelectorAll('.reviewer-tag');
 
 // ナビゲーション機能
 navLinks.forEach(link => {
@@ -81,6 +88,8 @@ function showSection(sectionName) {
         // セクション固有の初期化
         if (sectionName === 'pr-list') {
             renderPRTable(samplePRs);
+        } else if (sectionName === 'create-pr') {
+            initializeCreatePRForm();
         }
     }
 }
@@ -276,6 +285,144 @@ function updateDashboardStats() {
     if (completedElement) completedElement.textContent = approvedCount + rejectedCount;
 }
 
+// PR作成フォームの初期化
+function initializeCreatePRForm() {
+    // ラベルタグのクリックイベント
+    labelTags.forEach(tag => {
+        tag.addEventListener('click', () => {
+            const label = tag.getAttribute('data-label');
+            if (selectedLabels.includes(label)) {
+                selectedLabels = selectedLabels.filter(l => l !== label);
+                tag.classList.remove('selected');
+            } else {
+                selectedLabels.push(label);
+                tag.classList.add('selected');
+            }
+        });
+    });
+
+    // レビュアータグのクリックイベント
+    reviewerTags.forEach(tag => {
+        tag.addEventListener('click', () => {
+            const reviewer = tag.getAttribute('data-reviewer');
+            if (selectedReviewers.includes(reviewer)) {
+                selectedReviewers = selectedReviewers.filter(r => r !== reviewer);
+                tag.classList.remove('selected');
+            } else {
+                selectedReviewers.push(reviewer);
+                tag.classList.add('selected');
+            }
+        });
+    });
+
+    // ファイルアップロードの処理
+    const fileInput = document.getElementById('pr-files');
+    if (fileInput) {
+        fileInput.addEventListener('change', handleFileUpload);
+    }
+}
+
+// ファイルアップロード処理
+function handleFileUpload(event) {
+    const files = event.target.files;
+    if (files.length > 0) {
+        const fileNames = Array.from(files).map(file => file.name).join(', ');
+        showNotification(`ファイルが選択されました: ${fileNames}`, 'success');
+    }
+}
+
+// PR作成フォームの送信処理
+if (createPRForm) {
+    createPRForm.addEventListener('submit', handleCreatePR);
+}
+
+function handleCreatePR(e) {
+    e.preventDefault();
+    
+    const formData = {
+        title: document.getElementById('pr-title').value,
+        description: document.getElementById('pr-description').value,
+        author: document.getElementById('pr-author').value,
+        branch: document.getElementById('pr-branch').value,
+        type: document.getElementById('pr-type').value,
+        priority: document.getElementById('pr-priority').value,
+        labels: selectedLabels,
+        reviewers: selectedReviewers
+    };
+    
+    // バリデーション
+    if (!formData.title || !formData.description || !formData.author || !formData.branch) {
+        showNotification('必須項目を入力してください。', 'error');
+        return;
+    }
+    
+    if (selectedLabels.length === 0) {
+        showNotification('少なくとも1つのラベルを選択してください。', 'error');
+        return;
+    }
+    
+    if (selectedReviewers.length === 0) {
+        showNotification('少なくとも1人のレビュアーを選択してください。', 'error');
+        return;
+    }
+    
+    // 新しいPRを作成
+    const newPR = {
+        id: samplePRs.length + 1,
+        title: formData.title,
+        author: formData.author,
+        status: 'pending',
+        createdAt: new Date().toISOString().split('T')[0],
+        description: formData.description,
+        branch: formData.branch,
+        type: formData.type,
+        priority: formData.priority,
+        labels: formData.labels,
+        reviewers: formData.reviewers
+    };
+    
+    // PRリストに追加
+    samplePRs.unshift(newPR);
+    
+    // 成功メッセージ
+    showNotification('PRが正常に作成されました！', 'success');
+    
+    // フォームをリセット
+    createPRForm.reset();
+    selectedLabels = [];
+    selectedReviewers = [];
+    
+    // ラベルとレビュアーの選択状態をリセット
+    labelTags.forEach(tag => tag.classList.remove('selected'));
+    reviewerTags.forEach(tag => tag.classList.remove('selected'));
+    
+    // ダッシュボードに戻る
+    showSection('dashboard');
+    navLinks.forEach(navLink => navLink.classList.remove('active'));
+    document.querySelector('[data-section="dashboard"]').classList.add('active');
+    
+    // ダッシュボードの統計を更新
+    updateDashboardStats();
+}
+
+// 下書き保存機能
+function saveAsDraft() {
+    const formData = {
+        title: document.getElementById('pr-title').value,
+        description: document.getElementById('pr-description').value,
+        author: document.getElementById('pr-author').value,
+        branch: document.getElementById('pr-branch').value,
+        type: document.getElementById('pr-type').value,
+        priority: document.getElementById('pr-priority').value,
+        labels: selectedLabels,
+        reviewers: selectedReviewers
+    };
+    
+    // ローカルストレージに保存
+    localStorage.setItem('prDraft', JSON.stringify(formData));
+    showNotification('下書きが保存されました！', 'info');
+}
+
 // ページ読み込み時の初期化
 document.addEventListener('DOMContentLoaded', () => {
     // ダッシュボードの統計を更新
@@ -283,6 +430,43 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // デフォルトでダッシュボードを表示
     showSection('dashboard');
+    
+    // 下書きがあれば復元
+    const draft = localStorage.getItem('prDraft');
+    if (draft) {
+        try {
+            const draftData = JSON.parse(draft);
+            // 下書きデータをフォームに復元
+            if (draftData.title) document.getElementById('pr-title').value = draftData.title;
+            if (draftData.description) document.getElementById('pr-description').value = draftData.description;
+            if (draftData.author) document.getElementById('pr-author').value = draftData.author;
+            if (draftData.branch) document.getElementById('pr-branch').value = draftData.branch;
+            if (draftData.type) document.getElementById('pr-type').value = draftData.type;
+            if (draftData.priority) document.getElementById('pr-priority').value = draftData.priority;
+            
+            // ラベルとレビュアーの選択状態を復元
+            selectedLabels = draftData.labels || [];
+            selectedReviewers = draftData.reviewers || [];
+            
+            labelTags.forEach(tag => {
+                const label = tag.getAttribute('data-label');
+                if (selectedLabels.includes(label)) {
+                    tag.classList.add('selected');
+                }
+            });
+            
+            reviewerTags.forEach(tag => {
+                const reviewer = tag.getAttribute('data-reviewer');
+                if (selectedReviewers.includes(reviewer)) {
+                    tag.classList.add('selected');
+                }
+            });
+            
+            showNotification('下書きが復元されました！', 'info');
+        } catch (e) {
+            console.error('下書きの復元に失敗しました:', e);
+        }
+    }
 });
 
 // キーボードショートカット
@@ -300,6 +484,11 @@ document.addEventListener('keydown', (e) => {
                 updateActiveNav('pr-list');
                 break;
             case '3':
+                e.preventDefault();
+                showSection('create-pr');
+                updateActiveNav('create-pr');
+                break;
+            case '4':
                 e.preventDefault();
                 showSection('review-form');
                 updateActiveNav('review-form');
