@@ -49,9 +49,10 @@ let currentSection = 'dashboard';
 let selectedLabels = [];
 let selectedReviewers = [];
 
-// 検索履歴
-let searchHistory = [];
-let isDarkMode = false;
+// 通知システム
+let notifications = [];
+let notificationInterval = null;
+let autoRefreshInterval = null;
 
 // DOM要素の取得
 const navLinks = document.querySelectorAll('.nav-link');
@@ -64,14 +65,14 @@ const ratingStars = document.querySelectorAll('.star');
 const createPRForm = document.getElementById('create-pr-form');
 const labelTags = document.querySelectorAll('.label-tag');
 const reviewerTags = document.querySelectorAll('.reviewer-tag');
-const themeToggle = document.getElementById('theme-toggle');
-const modal = document.getElementById('pr-modal');
-const modalContent = document.getElementById('modal-content');
-const closeModal = document.querySelector('.close');
-const exportBtn = document.getElementById('export-btn');
-const clearSearchBtn = document.getElementById('clear-search-btn');
-const progressBar = document.getElementById('progress-bar');
-const progressFill = document.querySelector('.progress-fill');
+const priorityFilter = document.getElementById('priority-filter');
+const typeFilter = document.getElementById('type-filter');
+const advancedSearchBtn = document.getElementById('advanced-search-btn');
+const advancedSearchModal = document.getElementById('advanced-search-modal');
+const advancedSearchForm = document.getElementById('advanced-search-form');
+const notificationCenter = document.getElementById('notification-center');
+const notificationList = document.getElementById('notification-list');
+const clearAllNotificationsBtn = document.getElementById('clear-all-notifications');
 
 // ナビゲーション機能
 navLinks.forEach(link => {
@@ -147,21 +148,31 @@ if (statusFilter) {
     statusFilter.addEventListener('change', filterPRs);
 }
 
+if (priorityFilter) {
+    priorityFilter.addEventListener('change', filterPRs);
+}
+
+if (typeFilter) {
+    typeFilter.addEventListener('change', filterPRs);
+}
+
 if (searchInput) {
-    searchInput.addEventListener('input', (e) => {
-        filterPRs();
-        updateSearchHistory(e.target.value);
-    });
-    
-    // 検索履歴の表示
-    searchInput.addEventListener('focus', showSearchHistory);
-    searchInput.addEventListener('blur', () => {
-        setTimeout(hideSearchHistory, 200);
-    });
+    searchInput.addEventListener('input', filterPRs);
+}
+
+// 高度な検索
+if (advancedSearchBtn) {
+    advancedSearchBtn.addEventListener('click', openAdvancedSearch);
+}
+
+if (advancedSearchForm) {
+    advancedSearchForm.addEventListener('submit', handleAdvancedSearch);
 }
 
 function filterPRs() {
     const statusValue = statusFilter.value;
+    const priorityValue = priorityFilter.value;
+    const typeValue = typeFilter.value;
     const searchValue = searchInput.value.toLowerCase();
     
     let filteredPRs = samplePRs;
@@ -169,6 +180,16 @@ function filterPRs() {
     // ステータスでフィルタリング
     if (statusValue && statusValue !== 'all') {
         filteredPRs = filteredPRs.filter(pr => pr.status === statusValue);
+    }
+    
+    // 優先度でフィルタリング
+    if (priorityValue && priorityValue !== 'all') {
+        filteredPRs = filteredPRs.filter(pr => pr.priority === priorityValue);
+    }
+    
+    // タイプでフィルタリング
+    if (typeValue && typeValue !== 'all') {
+        filteredPRs = filteredPRs.filter(pr => pr.type === typeValue);
     }
     
     // 検索でフィルタリング
@@ -201,37 +222,8 @@ function reviewPR(prId) {
 function viewPR(prId) {
     const pr = samplePRs.find(p => p.id === prId);
     if (pr) {
-        showPRModal(pr);
+        alert(`PR #${pr.id}: ${pr.title}\n作成者: ${pr.author}\nステータス: ${getStatusText(pr.status)}\n説明: ${pr.description}`);
     }
-}
-
-// PR詳細モーダル表示
-function showPRModal(pr) {
-    modalContent.innerHTML = `
-        <h2>PR #${pr.id}: ${pr.title}</h2>
-        <div class="pr-details">
-            <p><strong>作成者:</strong> ${pr.author}</p>
-            <p><strong>ステータス:</strong> <span class="status-badge status-${pr.status}">${getStatusText(pr.status)}</span></p>
-            <p><strong>作成日:</strong> ${pr.createdAt}</p>
-            <p><strong>説明:</strong></p>
-            <div class="pr-description">${pr.description}</div>
-            ${pr.branch ? `<p><strong>ブランチ:</strong> ${pr.branch}</p>` : ''}
-            ${pr.type ? `<p><strong>タイプ:</strong> ${pr.type}</p>` : ''}
-            ${pr.priority ? `<p><strong>優先度:</strong> ${pr.priority}</p>` : ''}
-            ${pr.labels && pr.labels.length > 0 ? `<p><strong>ラベル:</strong> ${pr.labels.join(', ')}</p>` : ''}
-            ${pr.reviewers && pr.reviewers.length > 0 ? `<p><strong>レビュアー:</strong> ${pr.reviewers.join(', ')}</p>` : ''}
-        </div>
-        <div class="modal-actions">
-            <button class="btn btn-primary" onclick="reviewPR(${pr.id}); closePRModal();">レビュー開始</button>
-            <button class="btn btn-secondary" onclick="closePRModal()">閉じる</button>
-        </div>
-    `;
-    modal.style.display = 'block';
-}
-
-// モーダルを閉じる
-function closePRModal() {
-    modal.style.display = 'none';
 }
 
 // レビューフォームの処理
@@ -490,21 +482,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // デフォルトでダッシュボードを表示
     showSection('dashboard');
     
-    // テーマの復元
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-        toggleTheme();
-    }
+    // 設定の復元
+    loadSettings();
     
-    // 検索履歴の復元
-    const savedHistory = localStorage.getItem('searchHistory');
-    if (savedHistory) {
-        try {
-            searchHistory = JSON.parse(savedHistory);
-        } catch (e) {
-            console.error('検索履歴の復元に失敗しました:', e);
-        }
-    }
+    // 通知の復元
+    loadNotifications();
     
     // 下書きがあれば復元
     const draft = localStorage.getItem('prDraft');
@@ -554,6 +536,12 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('未処理のPromise拒否:', e.reason);
         showNotification('予期しないエラーが発生しました。', 'error');
     });
+    
+    // 通知システムの初期化
+    initNotificationSystem();
+    
+    // 自動更新の開始
+    startAutoRefresh();
 });
 
 // キーボードショートカット
@@ -651,192 +639,384 @@ style.textContent = `
 document.head.appendChild(style);
 
 // 新しい機能の関数群
-function setupEventListeners() {
-    // テーマ切り替え
-    if (themeToggle) {
-        themeToggle.addEventListener('click', toggleTheme);
-    }
-    
-    // モーダル関連
-    if (closeModal) {
-        closeModal.addEventListener('click', closePRModal);
-    }
-    
-    if (modal) {
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                closePRModal();
-            }
-        });
-    }
-    
-    // エクスポート機能
-    if (exportBtn) {
-        exportBtn.addEventListener('click', exportPRData);
-    }
-    
-    // 検索クリア
-    if (clearSearchBtn) {
-        clearSearchBtn.addEventListener('click', clearSearch);
+function openAdvancedSearch() {
+    if (advancedSearchModal) {
+        advancedSearchModal.style.display = 'block';
     }
 }
 
-// テーマ切り替え
-function toggleTheme() {
-    isDarkMode = !isDarkMode;
-    document.body.classList.toggle('dark-mode', isDarkMode);
-    
-    // アイコンの更新
-    const themeIcon = themeToggle.querySelector('.theme-icon');
-    if (isDarkMode) {
-        themeIcon.textContent = '☀️';
-        localStorage.setItem('theme', 'dark');
-    } else {
-        themeIcon.textContent = '🌙';
-        localStorage.setItem('theme', 'light');
+function closeAdvancedSearch() {
+    if (advancedSearchModal) {
+        advancedSearchModal.style.display = 'none';
     }
 }
 
-// データエクスポート
-function exportPRData() {
-    const currentPRs = getCurrentFilteredPRs();
-    const csvContent = convertToCSV(currentPRs);
-    downloadCSV(csvContent, 'pr-data.csv');
-    showNotification('データがエクスポートされました！', 'success');
-}
-
-// 現在のフィルタリングされたPRを取得
-function getCurrentFilteredPRs() {
-    const statusValue = statusFilter.value;
-    const searchValue = searchInput.value.toLowerCase();
+function handleAdvancedSearch(e) {
+    e.preventDefault();
+    
+    const dateFrom = document.getElementById('date-from').value;
+    const dateTo = document.getElementById('date-to').value;
+    const reviewerFilter = document.getElementById('reviewer-filter');
+    const labelFilter = document.getElementById('label-filter');
     
     let filteredPRs = samplePRs;
     
-    if (statusValue && statusValue !== 'all') {
-        filteredPRs = filteredPRs.filter(pr => pr.status === statusValue);
+    // 日付範囲でフィルタリング
+    if (dateFrom) {
+        filteredPRs = filteredPRs.filter(pr => pr.createdAt >= dateFrom);
+    }
+    if (dateTo) {
+        filteredPRs = filteredPRs.filter(pr => pr.createdAt <= dateTo);
     }
     
-    if (searchValue) {
+    // レビュアーでフィルタリング
+    const selectedReviewers = Array.from(reviewerFilter.selectedOptions).map(option => option.value);
+    if (selectedReviewers.length > 0) {
         filteredPRs = filteredPRs.filter(pr => 
-            pr.title.toLowerCase().includes(searchValue) ||
-            pr.description.toLowerCase().includes(searchValue) ||
-            pr.author.toLowerCase().includes(searchValue)
+            pr.reviewers && pr.reviewers.some(reviewer => selectedReviewers.includes(reviewer))
         );
     }
     
-    return filteredPRs;
-}
-
-// CSV変換
-function convertToCSV(data) {
-    const headers = ['ID', 'タイトル', '作成者', 'ステータス', '作成日', '説明'];
-    const csvRows = [headers.join(',')];
-    
-    data.forEach(pr => {
-        const row = [
-            pr.id,
-            `"${pr.title}"`,
-            pr.author,
-            getStatusText(pr.status),
-            pr.createdAt,
-            `"${pr.description}"`
-        ];
-        csvRows.push(row.join(','));
-    });
-    
-    return csvRows.join('\n');
-}
-
-// CSVダウンロード
-function downloadCSV(content, filename) {
-    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', filename);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
-
-// 検索クリア
-function clearSearch() {
-    if (searchInput) {
-        searchInput.value = '';
+    // ラベルでフィルタリング
+    const selectedLabels = Array.from(labelFilter.selectedOptions).map(option => option.value);
+    if (selectedLabels.length > 0) {
+        filteredPRs = filteredPRs.filter(pr => 
+            pr.labels && pr.labels.some(label => selectedLabels.includes(label))
+        );
     }
-    if (statusFilter) {
-        statusFilter.value = 'all';
-    }
-    filterPRs();
-    showNotification('検索条件がクリアされました', 'info');
+    
+    renderPRTable(filteredPRs);
+    closeAdvancedSearch();
+    showNotification(`高度な検索で${filteredPRs.length}件のPRが見つかりました`, 'info');
 }
 
-// 検索履歴の更新
-function updateSearchHistory(query) {
-    if (query.trim() && !searchHistory.includes(query)) {
-        searchHistory.unshift(query);
-        if (searchHistory.length > 10) {
-            searchHistory.pop();
+// 通知システム
+function initNotificationSystem() {
+    // 通知センターの表示/非表示
+    if (clearAllNotificationsBtn) {
+        clearAllNotificationsBtn.addEventListener('click', clearAllNotifications);
+    }
+    
+    // 通知間隔の設定
+    const interval = localStorage.getItem('notificationInterval') || 15;
+    startNotificationInterval(interval * 60 * 1000); // 分をミリ秒に変換
+}
+
+function addNotification(title, message, type = 'info') {
+    const notification = {
+        id: Date.now(),
+        title,
+        message,
+        type,
+        timestamp: new Date().toISOString(),
+        read: false
+    };
+    
+    notifications.unshift(notification);
+    
+    // 最大50件まで保存
+    if (notifications.length > 50) {
+        notifications.pop();
+    }
+    
+    // ローカルストレージに保存
+    saveNotifications();
+    
+    // 通知センターに表示
+    updateNotificationCenter();
+    
+    // ブラウザ通知
+    if (localStorage.getItem('browserNotifications') === 'true') {
+        showBrowserNotification(title, message);
+    }
+}
+
+function updateNotificationCenter() {
+    if (!notificationList) return;
+    
+    notificationList.innerHTML = notifications.map(notification => `
+        <div class="notification-item ${notification.read ? 'read' : 'unread'}" 
+             onclick="markNotificationAsRead(${notification.id})">
+            <div class="notification-title">${notification.title}</div>
+            <div class="notification-message">${notification.message}</div>
+            <div class="notification-time">${formatTime(notification.timestamp)}</div>
+        </div>
+    `).join('');
+}
+
+function markNotificationAsRead(id) {
+    const notification = notifications.find(n => n.id === id);
+    if (notification) {
+        notification.read = true;
+        saveNotifications();
+        updateNotificationCenter();
+    }
+}
+
+function clearAllNotifications() {
+    notifications = [];
+    saveNotifications();
+    updateNotificationCenter();
+    showNotification('すべての通知がクリアされました', 'info');
+}
+
+function saveNotifications() {
+    localStorage.setItem('notifications', JSON.stringify(notifications));
+}
+
+function loadNotifications() {
+    const saved = localStorage.getItem('notifications');
+    if (saved) {
+        try {
+            notifications = JSON.parse(saved);
+        } catch (e) {
+            console.error('通知の読み込みに失敗しました:', e);
         }
-        localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
     }
 }
 
-// 検索履歴の表示
-function showSearchHistory() {
-    if (searchHistory.length === 0) return;
-    
-    let historyContainer = document.querySelector('.search-history');
-    if (!historyContainer) {
-        historyContainer = document.createElement('div');
-        historyContainer.className = 'search-history';
-        searchInput.parentNode.appendChild(historyContainer);
+function startNotificationInterval(interval) {
+    if (notificationInterval) {
+        clearInterval(notificationInterval);
     }
     
-    historyContainer.innerHTML = searchHistory.map(query => 
-        `<div class="search-history-item" onclick="selectSearchHistory('${query}')">${query}</div>`
-    ).join('');
+    notificationInterval = setInterval(() => {
+        // 定期的な通知チェック
+        checkForNotifications();
+    }, interval);
 }
 
-// 検索履歴の選択
-function selectSearchHistory(query) {
-    searchInput.value = query;
-    filterPRs();
-    hideSearchHistory();
-}
-
-// 検索履歴の非表示
-function hideSearchHistory() {
-    const historyContainer = document.querySelector('.search-history');
-    if (historyContainer) {
-        historyContainer.remove();
+function checkForNotifications() {
+    // レビュー待ちのPRがあるかチェック
+    const pendingPRs = samplePRs.filter(pr => pr.status === 'pending');
+    if (pendingPRs.length > 0) {
+        addNotification(
+            'レビュー待ちのPRがあります',
+            `${pendingPRs.length}件のPRがレビュー待ちです`,
+            'warning'
+        );
     }
 }
 
-// 進捗バーの初期化
-function initProgressBar() {
-    if (progressBar && progressFill) {
-        // ページ読み込み時の進捗
-        let progress = 0;
-        const interval = setInterval(() => {
-            progress += Math.random() * 15;
-            if (progress > 90) {
-                progress = 90;
-                clearInterval(interval);
+function showBrowserNotification(title, message) {
+    if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification(title, { body: message });
+    } else if ('Notification' in window && Notification.permission !== 'denied') {
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                new Notification(title, { body: message });
             }
-            progressFill.style.width = progress + '%';
-        }, 100);
-        
-        // ページ読み込み完了時に100%にする
-        window.addEventListener('load', () => {
-            progressFill.style.width = '100%';
-            setTimeout(() => {
-                progressBar.style.opacity = '0';
-                setTimeout(() => {
-                    progressBar.style.display = 'none';
-                }, 300);
-            }, 500);
         });
     }
 }
+
+// 設定管理
+function loadSettings() {
+    // 通知設定
+    const emailNotifications = document.getElementById('email-notifications');
+    const browserNotifications = document.getElementById('browser-notifications');
+    const notificationInterval = document.getElementById('notification-interval');
+    const itemsPerPage = document.getElementById('items-per-page');
+    const autoRefreshInterval = document.getElementById('auto-refresh-interval');
+    
+    if (emailNotifications) {
+        emailNotifications.checked = localStorage.getItem('emailNotifications') !== 'false';
+    }
+    if (browserNotifications) {
+        browserNotifications.checked = localStorage.getItem('browserNotifications') !== 'false';
+    }
+    if (notificationInterval) {
+        notificationInterval.value = localStorage.getItem('notificationInterval') || '15';
+    }
+    if (itemsPerPage) {
+        itemsPerPage.value = localStorage.getItem('itemsPerPage') || '25';
+    }
+    if (autoRefreshInterval) {
+        autoRefreshInterval.value = localStorage.getItem('autoRefreshInterval') || '60';
+    }
+    
+    // 設定変更のイベントリスナー
+    if (emailNotifications) {
+        emailNotifications.addEventListener('change', saveSettings);
+    }
+    if (browserNotifications) {
+        browserNotifications.addEventListener('change', saveSettings);
+    }
+    if (notificationInterval) {
+        notificationInterval.addEventListener('change', saveSettings);
+    }
+    if (itemsPerPage) {
+        itemsPerPage.addEventListener('change', saveSettings);
+    }
+    if (autoRefreshInterval) {
+        autoRefreshInterval.addEventListener('change', saveSettings);
+    }
+}
+
+function saveSettings() {
+    const emailNotifications = document.getElementById('email-notifications');
+    const browserNotifications = document.getElementById('browser-notifications');
+    const notificationInterval = document.getElementById('notification-interval');
+    const itemsPerPage = document.getElementById('items-per-page');
+    const autoRefreshInterval = document.getElementById('auto-refresh-interval');
+    
+    if (emailNotifications) {
+        localStorage.setItem('emailNotifications', emailNotifications.checked);
+    }
+    if (browserNotifications) {
+        localStorage.setItem('browserNotifications', browserNotifications.checked);
+    }
+    if (notificationInterval) {
+        localStorage.setItem('notificationInterval', notificationInterval.value);
+        startNotificationInterval(notificationInterval.value * 60 * 1000);
+    }
+    if (itemsPerPage) {
+        localStorage.setItem('itemsPerPage', itemsPerPage.value);
+    }
+    if (autoRefreshInterval) {
+        localStorage.setItem('autoRefreshInterval', autoRefreshInterval.value);
+        startAutoRefresh();
+    }
+}
+
+// 自動更新
+function startAutoRefresh() {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+    }
+    
+    const interval = localStorage.getItem('autoRefreshInterval') || 60;
+    if (interval > 0) {
+        autoRefreshInterval = setInterval(() => {
+            updateDashboardStats();
+            // 現在のセクションがPR一覧の場合、テーブルも更新
+            if (currentSection === 'pr-list') {
+                renderPRTable(samplePRs);
+            }
+        }, interval * 1000);
+    }
+}
+
+// ユーティリティ関数
+function formatTime(timestamp) {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diff = now - date;
+    
+    if (diff < 60000) { // 1分未満
+        return '今';
+    } else if (diff < 3600000) { // 1時間未満
+        return `${Math.floor(diff / 60000)}分前`;
+    } else if (diff < 86400000) { // 1日未満
+        return `${Math.floor(diff / 3600000)}時間前`;
+    } else {
+        return date.toLocaleDateString('ja-JP');
+    }
+}
+
+// データエクスポート・インポート
+function exportAllData() {
+    const data = {
+        prs: samplePRs,
+        notifications: notifications,
+        settings: {
+            emailNotifications: localStorage.getItem('emailNotifications'),
+            browserNotifications: localStorage.getItem('browserNotifications'),
+            notificationInterval: localStorage.getItem('notificationInterval'),
+            itemsPerPage: localStorage.getItem('itemsPerPage'),
+            autoRefreshInterval: localStorage.getItem('autoRefreshInterval')
+        }
+    };
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `pr-review-data-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showNotification('全データがエクスポートされました', 'success');
+}
+
+function importData() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.prs) {
+                        samplePRs.length = 0;
+                        samplePRs.push(...data.prs);
+                    }
+                    if (data.notifications) {
+                        notifications.length = 0;
+                        notifications.push(...data.notifications);
+                    }
+                    if (data.settings) {
+                        Object.entries(data.settings).forEach(([key, value]) => {
+                            if (value !== null) {
+                                localStorage.setItem(key, value);
+                            }
+                        });
+                    }
+                    
+                    updateDashboardStats();
+                    if (currentSection === 'pr-list') {
+                        renderPRTable(samplePRs);
+                    }
+                    updateNotificationCenter();
+                    loadSettings();
+                    
+                    showNotification('データがインポートされました', 'success');
+                } catch (error) {
+                    showNotification('データのインポートに失敗しました', 'error');
+                    console.error('インポートエラー:', error);
+                }
+            };
+            reader.readAsText(file);
+        }
+    };
+    input.click();
+}
+
+function clearAllData() {
+    if (confirm('本当にすべてのデータを削除しますか？この操作は取り消せません。')) {
+        localStorage.clear();
+        samplePRs.length = 0;
+        notifications.length = 0;
+        
+        updateDashboardStats();
+        if (currentSection === 'pr-list') {
+            renderPRTable(samplePRs);
+        }
+        updateNotificationCenter();
+        
+        showNotification('すべてのデータがクリアされました', 'info');
+    }
+}
+
+// 設定画面のイベントリスナー設定
+document.addEventListener('DOMContentLoaded', () => {
+    // データ管理ボタンのイベントリスナー
+    const exportAllBtn = document.getElementById('export-all-btn');
+    const importBtn = document.getElementById('import-btn');
+    const clearDataBtn = document.getElementById('clear-data-btn');
+    
+    if (exportAllBtn) {
+        exportAllBtn.addEventListener('click', exportAllData);
+    }
+    if (importBtn) {
+        importBtn.addEventListener('click', importData);
+    }
+    if (clearDataBtn) {
+        clearDataBtn.addEventListener('click', clearAllData);
+    }
+});
