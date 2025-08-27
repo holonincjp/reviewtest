@@ -39,8 +39,71 @@ const samplePRs = [
     status: "approved",
     createdAt: "2025-01-11",
     description: "SQLインジェクション対策とXSS対策の実装"
+  },
+  {
+    id: 6,
+    title: "ログ機能の実装",
+    author: "山田次郎",
+    status: "reviewed",
+    createdAt: "2025-01-10",
+    description: "アプリケーションログの収集と分析機能を追加"
+  },
+  {
+    id: 7,
+    title: "API仕様書の更新",
+    author: "中村花子",
+    status: "reviewed",
+    createdAt: "2025-01-09",
+    description: "REST APIの仕様書を最新版に更新しまた"
+  },
+  {
+    id: 8,
+    title: "データベース設計の見直し",
+    author: "佐々木健太",
+    status: "reviewed",
+    createdAt: "2025-01-08",
+    description: "パフォーマンス向上のためテーブル構造を最適化"
   }
 ];
+
+// レビュー済みPRのレビュー内容サンプルデータ
+const reviewData = {
+  2: {
+    reviewer: "田中太郎",
+    reviewDate: "2025-01-14",
+    score: 5,
+    status: "承認",
+    comment: "デザインの改善が素晴らしいです。モバイル対応も完璧で、ユーザビリティが大幅に向上しています。レスポンシブデザインの実装方法も適切で、保守性も考慮されています。"
+  },
+  5: {
+    reviewer: "佐藤花子",
+    reviewDate: "2025-01-11",
+    score: 4,
+    status: "承認",
+    comment: "セキュリティ対策が適切に実装されています。SQLインジェクション対策とXSS対策の両方が網羅されており、セキュリティレベルが向上しています。ただし、ログ出力の部分で少し改善の余地があります。"
+  },
+  6: {
+    reviewer: "高橋美咲",
+    reviewDate: "2025-01-10",
+    score: 4,
+    status: "レビュー済み",
+    comment: "ログ機能の実装は適切です。ログレベルの設定やローテーション機能も含まれており、運用面でも考慮されています。パフォーマンスへの影響も最小限に抑えられています。"
+  },
+  7: {
+    reviewer: "鈴木一郎",
+    reviewDate: "2025-01-09",
+    score: 3,
+    status: "レビュー済み",
+    comment: "API仕様書の更新は必要ですが、一部のエンドポイントの説明が不十分です。リクエスト・レスポンスの例やエラーハンドリングの詳細を追加する必要があります。"
+  },
+  8: {
+    reviewer: "伊藤健太",
+    reviewDate: "2025-01-08",
+    score: 5,
+    status: "レビュー済み",
+    comment: "データベース設計の見直しは素晴らしいです。インデックスの最適化やクエリの効率化が適切に行われており、パフォーマンスが大幅に向上しています。設計思想も明確で、将来の拡張性も考慮されています。"
+  }
+};
 
 // 現在のセクションを管理
 let currentSection = 'dashboard';
@@ -48,6 +111,21 @@ let currentSection = 'dashboard';
 // 選択されたラベルとレビュアー
 let selectedLabels = [];
 let selectedReviewers = [];
+
+// 致命的なエラーを含むコード
+function brokenFunction() {
+  console.log("This function is broken");
+  // 構文エラー: 閉じ括弧が不足
+  if (true) {
+    console.log("Missing closing parenthesis");
+  }
+
+  // 未定義変数の使用
+  undefinedVariable = "This will cause an error";
+
+  // 関数の呼び出しエラー
+  nonExistentFunction();
+}
 
 // 検索履歴
 let searchHistory = [];
@@ -114,6 +192,19 @@ function renderPRTable(prs) {
 
   prs.forEach(pr => {
     const row = document.createElement('tr');
+
+    // レビューボタンの表示を状況に応じて変更
+    let reviewButtonText = 'レビュー';
+    let reviewButtonClass = 'btn-primary';
+
+    if (pr.status === 'approved' || pr.status === 'reviewed') {
+      reviewButtonText = 'レビューを見る';
+      reviewButtonClass = 'btn-info';
+    } else {
+      reviewButtonText = 'レビューをする';
+      reviewButtonClass = 'btn-primary';
+    }
+
     row.innerHTML = `
             <td>#${pr.id}</td>
             <td>
@@ -124,7 +215,7 @@ function renderPRTable(prs) {
             <td><span class="status-badge status-${pr.status}">${getStatusText(pr.status)}</span></td>
             <td>${pr.createdAt}</td>
             <td>
-                <button class="btn btn-primary" onclick="reviewPR(${pr.id})">レビュー</button>
+                <button class="btn ${reviewButtonClass}" onclick="reviewPR(${pr.id})">${reviewButtonText}</button>
                 <button class="btn btn-secondary" onclick="viewPR(${pr.id})">詳細</button>
             </td>
         `;
@@ -136,6 +227,7 @@ function renderPRTable(prs) {
 function getStatusText(status) {
   const statusMap = {
     'pending': 'レビュー待ち',
+    'reviewed': 'レビュー済み',
     'approved': '承認済み',
     'rejected': '却下'
   };
@@ -185,17 +277,81 @@ function filterPRs() {
 
 // レビュー機能
 function reviewPR(prId) {
+  const pr = samplePRs.find(p => p.id === prId);
+  if (!pr) return;
+
   showSection('review-form');
 
   // ナビリンクのアクティブ状態を更新
   navLinks.forEach(navLink => navLink.classList.remove('active'));
   document.querySelector('[data-section="review-form"]').classList.add('active');
 
-  // PR番号を自動入力
-  const prIdInput = document.getElementById('pr-id');
-  if (prIdInput) {
-    prIdInput.value = prId;
+  // 承認済みまたはレビュー済みの場合はレビュー内容を表示
+  if (pr.status === 'approved' || pr.status === 'reviewed') {
+    showReviewContent(prId);
+  } else {
+    // レビュー待ちまたは却下の場合はレビューフォームを表示
+    showReviewForm(prId);
   }
+}
+
+// レビュー内容を表示
+function showReviewContent(prId) {
+  const review = reviewData[prId];
+  if (!review) return;
+
+  // タイトルを「レビュー」に変更
+  document.querySelector('#review-form h2').textContent = 'レビュー';
+
+  // レビュー内容表示エリアを表示
+  document.getElementById('review-display').style.display = 'block';
+  document.getElementById('review-form-element').style.display = 'none';
+
+  // レビュー内容を設定
+  document.getElementById('display-pr-id').textContent = prId;
+  document.getElementById('display-reviewer').textContent = review.reviewer;
+  document.getElementById('display-review-date').textContent = review.reviewDate;
+  document.getElementById('display-score').textContent = `${review.score}/5`;
+  document.getElementById('display-status').textContent = review.status;
+  document.getElementById('display-comment').textContent = review.comment;
+}
+
+// レビューフォームを表示
+function showReviewForm(prId = null) {
+  // タイトルを「レビューフォーム」に戻す
+  document.querySelector('#review-form h2').textContent = 'レビューフォーム';
+
+  // レビュー内容表示エリアを非表示
+  document.getElementById('review-display').style.display = 'none';
+  document.getElementById('review-form-element').style.display = 'block';
+
+  // PR番号を自動入力
+  if (prId) {
+    const prIdInput = document.getElementById('pr-id');
+    if (prIdInput) {
+      prIdInput.value = prId;
+    }
+  }
+}
+
+// 一覧画面に戻る
+function backToPRList() {
+  showSection('pr-list');
+
+  // ナビリンクのアクティブ状態を更新
+  navLinks.forEach(navLink => navLink.classList.remove('active'));
+  document.querySelector('[data-section="pr-list"]').classList.add('active');
+
+  // レビューフォームをリセット
+  document.getElementById('review-form-element').reset();
+  resetRating();
+
+  // レビュー内容表示エリアも非表示
+  document.getElementById('review-display').style.display = 'none';
+  document.getElementById('review-form-element').style.display = 'block';
+
+  // タイトルを「レビューフォーム」に戻す
+  document.querySelector('#review-form h2').textContent = 'レビューフォーム';
 }
 
 function viewPR(prId) {
@@ -242,9 +398,18 @@ if (reviewForm) {
 function handleReviewSubmit(e) {
   e.preventDefault();
 
+  const prId = parseInt(document.getElementById('pr-id').value);
+  const pr = samplePRs.find(p => p.id === prId);
+
+  // 承認済みまたはレビュー済みのPRはレビューできない
+  if (pr && (pr.status === 'approved' || pr.status === 'reviewed')) {
+    alert('このPRは既にレビュー済みです。新規レビューは作成できません。');
+    return;
+  }
+
   const formData = new FormData(reviewForm);
   const reviewData = {
-    prId: document.getElementById('pr-id').value,
+    prId: prId,
     reviewerName: document.getElementById('reviewer-name').value,
     comment: document.getElementById('review-comment').value,
     status: document.getElementById('review-status').value,
