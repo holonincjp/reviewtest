@@ -205,6 +205,12 @@ function renderPRTable(prs) {
       reviewButtonClass = 'btn-primary';
     }
 
+    // レビュー内容ボタンの表示制御
+    let reviewContentButton = '';
+    if (pr.status === 'approved' || pr.status === 'reviewed') {
+      reviewContentButton = `<button class="btn btn-warning btn-sm" onclick="showReviewContent(${pr.id})">レビュー内容</button>`;
+    }
+
     row.innerHTML = `
             <td>#${pr.id}</td>
             <td>
@@ -215,8 +221,11 @@ function renderPRTable(prs) {
             <td><span class="status-badge status-${pr.status}">${getStatusText(pr.status)}</span></td>
             <td>${pr.createdAt}</td>
             <td>
-                <button class="btn ${reviewButtonClass}" onclick="reviewPR(${pr.id})">${reviewButtonText}</button>
-                <button class="btn btn-secondary" onclick="viewPR(${pr.id})">詳細</button>
+                <div class="action-buttons">
+                    <button class="btn ${reviewButtonClass}" onclick="reviewPR(${pr.id})">${reviewButtonText}</button>
+                    <button class="btn btn-secondary" onclick="viewPR(${pr.id})">詳細</button>
+                    ${reviewContentButton}
+                </div>
             </td>
         `;
     prTableBody.appendChild(row);
@@ -298,7 +307,17 @@ function reviewPR(prId) {
 // レビュー内容を表示
 function showReviewContent(prId) {
   const review = reviewData[prId];
-  if (!review) return;
+  if (!review) {
+    alert('レビュー内容が見つかりません。');
+    return;
+  }
+
+  // レビューフォームセクションに移動
+  showSection('review-form');
+
+  // ナビリンクのアクティブ状態を更新
+  navLinks.forEach(navLink => navLink.classList.remove('active'));
+  document.querySelector('[data-section="review-form"]').classList.add('active');
 
   // タイトルを「レビュー」に変更
   document.querySelector('#review-form h2').textContent = 'レビュー';
@@ -749,6 +768,12 @@ document.addEventListener('DOMContentLoaded', () => {
     console.error('未処理のPromise拒否:', e.reason);
     showNotification('予期しないエラーが発生しました。', 'error');
   });
+
+  // イベントリスナーの設定
+  setupEventListeners();
+
+  // 進捗バーの初期化
+  initProgressBar();
 });
 
 // キーボードショートカット
@@ -864,6 +889,13 @@ function setupEventListeners() {
       }
     });
   }
+
+  // モーダルの閉じるボタンが動的に生成される場合の対応
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('close')) {
+      closePRModal();
+    }
+  });
 
   // エクスポート機能
   if (exportBtn) {
