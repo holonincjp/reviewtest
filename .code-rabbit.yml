@@ -8,27 +8,28 @@ auto_approve: false
 
 # レビュー設定
 review:
-  diff_only: true # 差分のみ対象
-  mode: quick # 短時間レビュー（目安5分）
-  checks:
-    html:
-      - h1-duplicate
-      - tag-structure
-      - id-duplicate
-      - alt-attribute
-      - typo
-    js:
-      - syntax-error
-      - undefined-variable
-      - no-var
-      - console-log
-      - infinite-loop
-      - runtime-error
-  skip:
-    - css
-    - naming-conventions
-    - micro-optimizations
-    - style-nits
+  # 日本語でのレビュー
+  language: "ja"
+
+  # レビューの詳細度
+  detail_level: "comprehensive"
+
+  # コードの品質チェック
+  quality_checks:
+    - "security"
+    - "performance"
+    - "readability"
+    - "maintainability"
+    - "best_practices"
+
+  # コメントのスタイル
+  comment_style: "constructive"
+
+  # 自動修正の提案
+  suggest_fixes: true
+
+  # テストカバレッジの確認
+  check_test_coverage: true
 
 # おすすめのオプション
 recommendations:
