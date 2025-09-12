@@ -465,6 +465,100 @@ function closePRModal() {
   modal.style.display = 'none';
 }
 
+// 時間比較グラフを表示
+function showTimeComparisonGraph() {
+  const timeGraphModal = document.getElementById('time-graph-modal');
+  timeGraphModal.style.display = 'block';
+  
+  // 簡単なグラフを描画（Canvas使用）
+  drawTimeComparisonChart();
+}
+
+// 時間比較グラフを閉じる
+function closeTimeGraphModal() {
+  const timeGraphModal = document.getElementById('time-graph-modal');
+  timeGraphModal.style.display = 'none';
+}
+
+// 時間比較チャートを描画
+function drawTimeComparisonChart() {
+  const canvas = document.getElementById('timeChart');
+  if (!canvas) return;
+  
+  const ctx = canvas.getContext('2d');
+  const width = canvas.width;
+  const height = canvas.height;
+  
+  // 背景をクリア
+  ctx.clearRect(0, 0, width, height);
+  
+  // ダミーデータ
+  const data = {
+    labels: ['1週目', '2週目', '3週目', '4週目'],
+    currentMonth: [2.1, 2.3, 2.2, 2.4],
+    previousMonth: [2.8, 2.9, 2.7, 2.8]
+  };
+  
+  const padding = 60;
+  const chartWidth = width - padding * 2;
+  const chartHeight = height - padding * 2;
+  const barWidth = chartWidth / (data.labels.length * 3);
+  
+  // グリッド線を描画
+  ctx.strokeStyle = '#e0e0e0';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = padding + (chartHeight / 4) * i;
+    ctx.beginPath();
+    ctx.moveTo(padding, y);
+    ctx.lineTo(width - padding, y);
+    ctx.stroke();
+  }
+  
+  // データを描画
+  data.labels.forEach((label, index) => {
+    const x = padding + (chartWidth / data.labels.length) * index + chartWidth / (data.labels.length * 2);
+    
+    // 今月のデータ（青）
+    const currentHeight = (data.currentMonth[index] / 3) * chartHeight;
+    ctx.fillStyle = '#667eea';
+    ctx.fillRect(x - barWidth, padding + chartHeight - currentHeight, barWidth, currentHeight);
+    
+    // 先月のデータ（グレー）
+    const previousHeight = (data.previousMonth[index] / 3) * chartHeight;
+    ctx.fillStyle = '#6c757d';
+    ctx.fillRect(x, padding + chartHeight - previousHeight, barWidth, previousHeight);
+    
+    // ラベル
+    ctx.fillStyle = '#333';
+    ctx.font = '12px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(label, x, height - 20);
+  });
+  
+  // Y軸ラベル
+  ctx.fillStyle = '#666';
+  ctx.font = '10px Arial';
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= 3; i++) {
+    const y = padding + (chartHeight / 3) * i;
+    ctx.fillText(`${3 - i}時間`, padding - 10, y + 4);
+  }
+  
+  // 凡例
+  ctx.fillStyle = '#667eea';
+  ctx.fillRect(width - 150, 20, 15, 15);
+  ctx.fillStyle = '#333';
+  ctx.font = '12px Arial';
+  ctx.textAlign = 'left';
+  ctx.fillText('今月', width - 130, 32);
+  
+  ctx.fillStyle = '#6c757d';
+  ctx.fillRect(width - 150, 40, 15, 15);
+  ctx.fillStyle = '#333';
+  ctx.fillText('先月', width - 130, 52);
+}
+
 // レビューフォームの処理
 if (reviewForm) {
   reviewForm.addEventListener('submit', handleReviewSubmit);
@@ -1054,6 +1148,7 @@ function setupEventListeners() {
   document.addEventListener('click', (e) => {
     if (e.target.classList.contains('close')) {
       closePRModal();
+      closeTimeGraphModal();
     }
   });
 

@@ -42,7 +42,7 @@
                         <p>件のレビューが完了しています</p>
                     </div>
                     
-                    <div class="card">
+                    <div class="card clickable-card" onclick="showTimeComparisonGraph()">
                         <h3>平均時間</h3>
                         <div class="number">2.5</div>
                         <p>時間でレビュー完了</p>
@@ -249,6 +249,31 @@
         <div class="modal-content">
             <span class="close">&times;</span>
             <div id="modal-content"></div>
+        </div>
+    </div>
+
+    <!-- 時間比較グラフモーダル -->
+    <div id="time-graph-modal" class="modal">
+        <div class="modal-content graph-modal">
+            <span class="close">&times;</span>
+            <h2>レビュー時間比較グラフ</h2>
+            <div id="time-graph-content">
+                <canvas id="timeChart" width="600" height="400"></canvas>
+            </div>
+            <div class="graph-stats">
+                <div class="stat-item">
+                    <span class="stat-label">今月の平均:</span>
+                    <span class="stat-value">2.3時間</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">先月の平均:</span>
+                    <span class="stat-value">2.8時間</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">改善率:</span>
+                    <span class="stat-value improvement">+17.9%</span>
+                </div>
+            </div>
         </div>
     </div>
 
