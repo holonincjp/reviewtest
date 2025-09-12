@@ -921,3 +921,111 @@ body.dark-mode .stat-label {
 body.dark-mode .stat-value {
   color: #e0e0e0;
 }
+
+/* チーム統計モーダル */
+.team-stats-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.team-member {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+}
+
+.member-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.member-info h3 {
+  margin: 0 0 0.5rem 0;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.member-info p {
+  margin: 0.25rem 0;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* バグレポートモーダル */
+.bug-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 2rem 0;
+}
+
+.bug-item {
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid;
+  background: #f8f9fa;
+}
+
+.bug-item.high-priority {
+  border-left-color: #dc3545;
+  background: #f8d7da;
+}
+
+.bug-item.medium-priority {
+  border-left-color: #ffc107;
+  background: #fff3cd;
+}
+
+.bug-item.low-priority {
+  border-left-color: #17a2b8;
+  background: #d1ecf1;
+}
+
+.bug-item h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+}
+
+.bug-item p {
+  margin: 0.5rem 0;
+  color: #333;
+}
+
+.bug-date {
+  font-size: 0.8rem;
+  color: #666;
+  float: right;
+}
+
+/* ダークモード対応 */
+body.dark-mode .team-member {
+  background: #3d3d3d;
+}
+
+body.dark-mode .member-info h3 {
+  color: #e0e0e0;
+}
+
+body.dark-mode .member-info p {
+  color: #ccc;
+}
+
+body.dark-mode .bug-item {
+  background: #3d3d3d;
+}
+
+body.dark-mode .bug-item p {
+  color: #e0e0e0;
+}
+
+body.dark-mode .bug-date {
+  color: #ccc;
+}

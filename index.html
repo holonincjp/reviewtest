@@ -57,6 +57,16 @@
                         <div class="number">15</div>
                         <p>件のPRが作成されまた</p>
                     </div>
+                    <div class="card clickable-card" onclick="showTeamStats()">
+                        <h3>チーム統計</h3>
+                        <div class="number">8</div>
+                        <p>人のメンバーが活動中</p>
+                    </div>
+                    <div class="card clickable-card" onclick="showBugReport()">
+                        <h3>バグレポート</h3>
+                        <div class="number">3</div>
+                        <p>件のバグが報告されています</p>
+                    </div>
                 </div>
             </section>
 
@@ -283,6 +293,57 @@
                 <div class="stat-item">
                     <span class="stat-label">改善率:</span>
                     <span class="stat-value improvement">+17.9%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- チーム統計モーダル -->
+    <div id="team-stats-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>チーム統計</h2>
+            <div class="team-stats-content">
+                <div class="team-member">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM2NjdlZWEiLz4KPHN2ZyB4PSIxMCIgeT0iMTAiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJ3aGl0ZSI+CjxwYXRoIGQ9Ik0xMiAxMmMyLjIxIDAgNC0xLjc5IDQtNHMtMS43OS00LTQtNC00IDEuNzktNCA0IDEuNzkgNCA0IDR6bTAgMmMtMi42NyAwLTggMS4zNC04IDR2MmgxNnYtMmMwLTIuNjYtNS4zMy00LTgtNHoiLz4KPC9zdmc+Cjwvc3ZnPgo=" alt="田中太郎" class="member-avatar">
+                    <div class="member-info">
+                        <h3>田中太郎</h3>
+                        <p>レビュー数: 15件</p>
+                        <p>平均時間: 2.1時間</p>
+                    </div>
+                </div>
+                <div class="team-member">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNlOTYzZTciLz4KPHN2ZyB4PSIxMCIgeT0iMTAiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJ3aGl0ZSI+CjxwYXRoIGQ9Ik0xMiAxMmMyLjIxIDAgNC0xLjc5IDQtNHMtMS43OS00LTQtNC00IDEuNzktNCA0IDEuNzkgNCA0IDR6bTAgMmMtMi42NyAwLTggMS4zNC04IDR2MmgxNnYtMmMwLTIuNjYtNS4zMy00LTgtNHoiLz4KPC9zdmc+Cjwvc3ZnPgo=" alt="佐藤花子" class="member-avatar">
+                    <div class="member-info">
+                        <h3>佐藤花子</h3>
+                        <p>レビュー数: 12件</p>
+                        <p>平均時間: 1.8時間</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- バグレポートモーダル -->
+    <div id="bug-report-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>バグレポート</h2>
+            <div class="bug-list">
+                <div class="bug-item high-priority">
+                    <h3>🚨 高優先度</h3>
+                    <p>ログイン機能でエラーが発生</p>
+                    <span class="bug-date">2025-01-20</span>
+                </div>
+                <div class="bug-item medium-priority">
+                    <h3>⚠️ 中優先度</h3>
+                    <p>モバイル表示が崩れる</p>
+                    <span class="bug-date">2025-01-19</span>
+                </div>
+                <div class="bug-item low-priority">
+                    <h3>ℹ️ 低優先度</h3>
+                    <p>フォントサイズが小さい</p>
+                    <span class="bug-date">2025-01-18</span>
                 </div>
             </div>
         </div>

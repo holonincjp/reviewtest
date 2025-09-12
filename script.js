@@ -542,6 +542,69 @@ function closeTimeGraphModal() {
   timeGraphModal.style.display = 'none';
 }
 
+// チーム統計を表示
+function showTeamStats() {
+  const teamStatsModal = document.getElementById('team-stats-modal');
+  teamStatsModal.style.display = 'block';
+}
+
+// チーム統計を閉じる
+function closeTeamStatsModal() {
+  const teamStatsModal = document.getElementById('team-stats-modal');
+  teamStatsModal.style.display = 'none';
+}
+
+// バグレポートを表示
+function showBugReport() {
+  const bugReportModal = document.getElementById('bug-report-modal');
+  bugReportModal.style.display = 'block';
+}
+
+// バグレポートを閉じる
+function closeBugReportModal() {
+  const bugReportModal = document.getElementById('bug-report-modal');
+  bugReportModal.style.display = 'none';
+}
+
+// 問題のある関数（CodeRabbitが検出すべき）
+function problematicFunction() {
+  // 未定義変数の使用
+  console.log(undefinedVariable);
+
+  // 無限ループの可能性
+  for (let i = 0; i < 10; i--) {
+    console.log(i);
+  }
+
+  // 構文エラー（意図的）
+  if (true {
+    console.log("Missing closing parenthesis");
+  }
+
+  // 存在しない関数の呼び出し
+  nonExistentFunction();
+
+  // 型エラーの可能性
+  const result = "string" + 123;
+  result.nonExistentMethod();
+}
+
+// バグのある関数
+function buggyFunction() {
+  // 配列の範囲外アクセス
+  const arr = [1, 2, 3];
+  console.log(arr[10]);
+
+  // null/undefined チェックなし
+  const obj = null;
+  console.log(obj.property);
+
+  // 非同期処理のエラーハンドリングなし
+  fetch('/api/data')
+    .then(response => response.json())
+    .then(data => console.log(data));
+}
+
 // 時間比較チャートを描画
 function drawTimeComparisonChart() {
   const canvas = document.getElementById('timeChart');
@@ -1211,6 +1274,8 @@ function setupEventListeners() {
     if (e.target.classList.contains('close')) {
       closePRModal();
       closeTimeGraphModal();
+      closeTeamStatsModal();
+      closeBugReportModal();
     }
   });
 
