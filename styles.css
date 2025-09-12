@@ -776,16 +776,6 @@ tr:hover {
   border-color: #117a8b;
 }
 
-.btn-warning {
-  background: #ffc107;
-  border-color: #ffc107;
-  color: #212529;
-}
-
-.btn-warning:hover {
-  background: #e0a800;
-  border-color: #d39e00;
-}
 
 /* ダークモード対応 */
 body.dark-mode .review-display {
