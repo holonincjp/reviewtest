@@ -1,36 +1,63 @@
-# CodeRabbit minimal config for quick reviews (日本語)
+# CodeRabbit Configuration File
+# 日本語でのレビューとおすすめのオプションを含む設定
+
+# 基本設定
 language: "ja"
-review_style: "quick" # 詳細すぎない、短時間向け
+review_style: "friendly"
 auto_approve: false
 
-# レビュー設定（最小必須チェック）
+# レビュー設定
 review:
-  language: "ja"
-  detail_level: "quick" # comprehensive ではなく quick に
-  diff_only: true # PRの差分ファイルのみを対象
-  max_files: 20 # 差分ファイルの上限（大規模PRは分割を促す）
-  # 最低限の致命チェックに絞る
+  diff_only: true # 差分のみ対象
+  mode: quick # 短時間レビュー（目安5分）
   checks:
     html:
-      - "h1-duplicate" # h1が複数ないか（重要）
-      - "tag-structure" # タグ閉じ忘れ / 入れ子誤り
-      - "id-duplicate" # 重複ID
-      - "alt-attribute" # 画像に alt があるか（装飾は空alt可）
-      - "typo" # 誤字脱字（表示テキスト・コメント）
+      - h1-duplicate
+      - tag-structure
+      - id-duplicate
+      - alt-attribute
+      - typo
     js:
-      - "syntax-error" # 構文エラー
-      - "undefined-variable" # 未定義変数の参照
-      - "no-var" # var の使用禁止
-      - "console-log" # console.log 等デバッグ出力の残存
-      - "infinite-loop" # 無限ループや意図しない再帰
-      - "runtime-error" # 実行時エラー（別途ブラウザチェックを推奨）
+      - syntax-error
+      - undefined-variable
+      - no-var
+      - console-log
+      - infinite-loop
+      - runtime-error
+  skip:
+    - css
+    - naming-conventions
+    - micro-optimizations
+    - style-nits
 
-  # 追加の軽微な挙動設定
-  comment_style: "constructive"
-  suggest_fixes: false # 自動修正提案はオフ（処理軽量化のため）
-  check_test_coverage: false # テストカバレッジはオフ（時間増大を避ける）
+# おすすめのオプション
+recommendations:
+  # セキュリティのベストプラクティス
+  security:
+    enabled: true
+    priority: "high"
 
-# 除外（大きなバイナリ等は常に除外）
+  # パフォーマンスの最適化
+  performance:
+    enabled: true
+    priority: "medium"
+
+  # コードの可読性向上
+  readability:
+    enabled: true
+    priority: "medium"
+
+  # アーキテクチャの改善提案
+  architecture:
+    enabled: true
+    priority: "low"
+
+  # 依存関係の管理
+  dependencies:
+    enabled: true
+    priority: "medium"
+
+# 除外設定
 exclude:
   - "node_modules/**"
   - "dist/**"
@@ -40,34 +67,74 @@ exclude:
   - "package-lock.json"
   - "yarn.lock"
 
-# 通知（最低限）
+# 通知設定
 notifications:
+  # レビュー完了時の通知
   review_complete: true
-  critical_issues: true
-  security_issues: false # セキュリティは必要時に別途深堀りする
 
-# カスタムルール（最小限）
+  # 重要な問題発見時の通知
+  critical_issues: true
+
+  # セキュリティ問題の通知
+  security_issues: true
+
+# カスタムルール
 custom_rules:
-  typo:
+  # 日本語コメントの推奨
+  japanese_comments:
     enabled: true
-    message: "表示文言・コメントの誤字脱字を確認してください"
-  console_log:
-    enabled: true
-    message: "本番に残すべきではないログ出力がないか確認してください"
+    message: "重要なロジックには日本語でのコメントを追加することをお勧めします"
+
+  # エラーハンドリングの確認
   error_handling:
     enabled: true
-    message: "主要処理に対して適切なエラーハンドリングがあるか簡易確認"
+    message: "適切なエラーハンドリングが実装されているか確認してください"
 
-# 強制言語設定（日本語のまま）
+  # ログ出力の確認
+  logging:
+    enabled: true
+    message: "デバッグ用のログ出力が適切に実装されているか確認してください"
+
+# レビューテンプレート
+review_template:
+  title: "コードレビュー - {repository_name}"
+  sections:
+    - "概要"
+    - "変更内容"
+    - "改善点"
+    - "セキュリティチェック"
+    - "パフォーマンス"
+    - "テスト"
+    - "ドキュメント"
+    - "その他の推奨事項"
+
+# 日本語レビューを確実に有効にする追加設定
 settings:
+  # レビュー言語の強制設定
   force_language: "ja"
+
+  # レビューコメントの言語
   comment_language: "ja"
+
+  # レビューレポートの言語
   report_language: "ja"
+
+  # 日本語でのフィードバック
   feedback_language: "ja"
 
-# CodeRabbit固有（互換性を保つため残す）
+# CodeRabbit固有の設定
 code_rabbit:
+  # レビュー言語の設定
   review_language: "ja"
+
+  # コメント言語の設定
   comment_language: "ja"
+
+  # フィードバック言語の設定
   feedback_language: "ja"
+
+  # 日本語でのレビューを強制
   force_japanese: true
+
+  # レビューテンプレートの言語
+  template_language: "ja"
