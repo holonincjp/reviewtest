@@ -838,3 +838,86 @@ body.dark-mode .review-comment-box {
 body.dark-mode .clickable-card:hover {
   box-shadow: 0 8px 25px rgba(255, 255, 255, 0.1);
 }
+
+/* 時間比較グラフモーダル */
+.graph-modal {
+  max-width: 800px;
+  width: 90%;
+}
+
+.graph-modal h2 {
+  color: #667eea;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  border-bottom: 2px solid #667eea;
+  padding-bottom: 0.5rem;
+}
+
+#time-graph-content {
+  text-align: center;
+  margin: 2rem 0;
+}
+
+#timeChart {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: white;
+  max-width: 100%;
+  height: auto;
+}
+
+.graph-stats {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 2rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.stat-item {
+  text-align: center;
+  min-width: 120px;
+}
+
+.stat-label {
+  display: block;
+  font-size: 0.9rem;
+  color: #6c757d;
+  margin-bottom: 0.5rem;
+}
+
+.stat-value {
+  display: block;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.stat-value.improvement {
+  color: #28a745;
+}
+
+/* ダークモード対応 */
+body.dark-mode .graph-modal h2 {
+  color: #667eea;
+}
+
+body.dark-mode #timeChart {
+  background: #2d2d2d;
+  border-color: #555;
+}
+
+body.dark-mode .graph-stats {
+  background: #3d3d3d;
+}
+
+body.dark-mode .stat-label {
+  color: #ccc;
+}
+
+body.dark-mode .stat-value {
+  color: #e0e0e0;
+}
