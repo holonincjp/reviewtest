@@ -10,7 +10,6 @@ auto_approve: false
 review:
   diff_only: true # 差分のみ対象
   mode: quick # 短時間レビュー（目安5分）
-  language: ja-JP
   checks:
     html:
       - h1-duplicate
