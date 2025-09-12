@@ -63,6 +63,62 @@ const samplePRs = [
     status: "reviewed",
     createdAt: "2025-01-08",
     description: "パフォーマンス向上のためテーブル構造を最適化"
+  },
+  {
+    id: 9,
+    title: "ユーザーインターフェースの改善",
+    author: "山田太郎",
+    status: "pending",
+    createdAt: "2025-01-20",
+    description: "ユーザビリティを向上させるためのUI改善"
+  },
+  {
+    id: 10,
+    title: "APIエンドポイントの追加",
+    author: "田中花子",
+    status: "approved",
+    createdAt: "2025-01-18",
+    description: "新しい機能のためのAPIエンドポイントを実装"
+  },
+  {
+    id: 11,
+    title: "セキュリティパッチの適用",
+    author: "鈴木次郎",
+    status: "reviewed",
+    createdAt: "2025-01-16",
+    description: "既知の脆弱性に対するセキュリティパッチを適用"
+  },
+  {
+    id: 12,
+    title: "パフォーマンステストの追加",
+    author: "高橋三郎",
+    status: "pending",
+    createdAt: "2025-01-14",
+    description: "システムのパフォーマンスを測定するテストを追加"
+  },
+  {
+    id: 13,
+    title: "ドキュメントの更新",
+    author: "佐藤四郎",
+    status: "approved",
+    createdAt: "2024-12-28",
+    description: "API仕様書とユーザーマニュアルを最新版に更新"
+  },
+  {
+    id: 14,
+    title: "バグ修正: ログイン機能",
+    author: "伊藤五郎",
+    status: "reviewed",
+    createdAt: "2024-12-25",
+    description: "ログイン時の認証エラーを修正"
+  },
+  {
+    id: 15,
+    title: "データベースマイグレーション",
+    author: "中村六郎",
+    status: "approved",
+    createdAt: "2024-12-22",
+    description: "新しいテーブル構造へのデータベースマイグレーション"
   }
 ];
 
@@ -521,12 +577,35 @@ function updateDashboardStats() {
   const reviewedCount = samplePRs.filter(pr => pr.status === 'reviewed').length;
   const rejectedCount = samplePRs.filter(pr => pr.status === 'rejected').length;
 
+  // 現在の日付を取得
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+
+  // 今月作成のPR数
+  const currentMonthPRs = samplePRs.filter(pr => {
+    const prDate = new Date(pr.createdAt);
+    return prDate.getFullYear() === currentYear && prDate.getMonth() + 1 === currentMonth;
+  }).length;
+
+  // 先月作成のPR数
+  const previousYear = currentMonth === 1 ? currentYear - 1 : currentYear;
+  const previousMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+  const previousMonthPRs = samplePRs.filter(pr => {
+    const prDate = new Date(pr.createdAt);
+    return prDate.getFullYear() === previousYear && prDate.getMonth() + 1 === previousMonth;
+  }).length;
+
   // 統計カードの更新
   const pendingElement = document.querySelector('.card:nth-child(1) .number');
   const completedElement = document.querySelector('.card:nth-child(2) .number');
+  const currentMonthElement = document.querySelector('.card:nth-child(4) .number');
+  const previousMonthElement = document.querySelector('.card:nth-child(5) .number');
 
   if (pendingElement) pendingElement.textContent = pendingCount;
   if (completedElement) completedElement.textContent = approvedCount + reviewedCount + rejectedCount;
+  if (currentMonthElement) currentMonthElement.textContent = currentMonthPRs;
+  if (previousMonthElement) previousMonthElement.textContent = previousMonthPRs;
 }
 
 // ステータス別フィルタリング機能
@@ -554,6 +633,59 @@ function filterByStatus(status) {
       filterPRs();
     }
   }
+}
+
+// 月別フィルタリング機能
+function filterByMonth(monthType) {
+  // PR一覧セクションに移動
+  showSection('pr-list');
+
+  // ナビリンクのアクティブ状態を更新
+  navLinks.forEach(navLink => navLink.classList.remove('active'));
+  document.querySelector('[data-section="pr-list"]').classList.add('active');
+
+  // 現在の日付を取得
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1; // 0ベースなので+1
+
+  let targetYear, targetMonth;
+
+  if (monthType === 'current') {
+    // 今月
+    targetYear = currentYear;
+    targetMonth = currentMonth;
+  } else {
+    // 先月
+    targetYear = currentMonth === 1 ? currentYear - 1 : currentYear;
+    targetMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+  }
+
+  // 対象月のPRをフィルタリング
+  const monthPRs = samplePRs.filter(pr => {
+    const prDate = new Date(pr.createdAt);
+    const prYear = prDate.getFullYear();
+    const prMonth = prDate.getMonth() + 1;
+
+    return prYear === targetYear && prMonth === targetMonth;
+  });
+
+  // ステータスフィルターをリセット
+  if (statusFilter) {
+    statusFilter.value = 'all';
+  }
+
+  // 検索フィールドをリセット
+  if (searchInput) {
+    searchInput.value = '';
+  }
+
+  // フィルタリングされたPRを表示
+  renderPRTable(monthPRs);
+
+  // 通知を表示
+  const monthName = monthType === 'current' ? '今月' : '先月';
+  showNotification(`${monthName}作成のPRを表示しています（${monthPRs.length}件）`, 'info');
 }
 
 // PR作成フォームの初期化
