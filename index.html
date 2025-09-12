@@ -31,12 +31,12 @@
             <section id="dashboard" class="section active">
                 <h2>ダッシュボード</h2>
                 <div class="dashboard-grid">
-                    <div class="card">
+                    <div class="card clickable-card" onclick="filterByStatus('pending')">
                         <h3>レビュー待ち</h3>
                         <div class="number">5</div>
                         <p>件のPRがレビュー待ちです</p>
                     </div>
-                    <div class="card">
+                    <div class="card clickable-card" onclick="filterByStatus('completed')">
                         <h3>完了済み</h3>
                         <div class="number">12</div>
                         <p>件のレビューが完了しています</p>

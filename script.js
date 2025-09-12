@@ -223,7 +223,7 @@ function renderPRTable(prs) {
             <td>
                 <div class="action-buttons">
                     <button class="btn ${reviewButtonClass}" onclick="reviewPR(${pr.id})">${reviewButtonText}</button>
-                    <button class="btn btn-secondary" onclick="viewPR(${pr.id})">詳細</button>
+                <button class="btn btn-secondary" onclick="viewPR(${pr.id})">詳細</button>
                     ${reviewContentButton}
                 </div>
             </td>
@@ -518,6 +518,7 @@ function resetRating() {
 function updateDashboardStats() {
   const pendingCount = samplePRs.filter(pr => pr.status === 'pending').length;
   const approvedCount = samplePRs.filter(pr => pr.status === 'approved').length;
+  const reviewedCount = samplePRs.filter(pr => pr.status === 'reviewed').length;
   const rejectedCount = samplePRs.filter(pr => pr.status === 'rejected').length;
 
   // 統計カードの更新
@@ -525,7 +526,34 @@ function updateDashboardStats() {
   const completedElement = document.querySelector('.card:nth-child(2) .number');
 
   if (pendingElement) pendingElement.textContent = pendingCount;
-  if (completedElement) completedElement.textContent = approvedCount + rejectedCount;
+  if (completedElement) completedElement.textContent = approvedCount + reviewedCount + rejectedCount;
+}
+
+// ステータス別フィルタリング機能
+function filterByStatus(status) {
+  // PR一覧セクションに移動
+  showSection('pr-list');
+
+  // ナビリンクのアクティブ状態を更新
+  navLinks.forEach(navLink => navLink.classList.remove('active'));
+  document.querySelector('[data-section="pr-list"]').classList.add('active');
+
+  // ステータスフィルターを設定
+  if (statusFilter) {
+    if (status === 'completed') {
+      // 完了済みは承認済み、レビュー済み、却下を含む
+      statusFilter.value = 'all';
+      // 完了済みのPRのみを表示
+      const completedPRs = samplePRs.filter(pr =>
+        pr.status === 'approved' || pr.status === 'reviewed' || pr.status === 'rejected'
+      );
+      renderPRTable(completedPRs);
+    } else {
+      // その他のステータスは直接設定
+      statusFilter.value = status;
+      filterPRs();
+    }
+  }
 }
 
 // PR作成フォームの初期化
