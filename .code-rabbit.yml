@@ -1,3 +1,12 @@
+# CodeRabbit Configuration File
+# 日本語でのレビューとおすすめのオプションを含む設定
+
+# 基本設定
+language: "ja"
+review_style: "friendly"
+auto_approve: false
+
+# レビュー設定
 review:
   diff_only: true # 差分のみ対象
   mode: quick # 短時間レビュー（目安5分）
@@ -21,3 +30,112 @@ review:
     - naming-conventions
     - micro-optimizations
     - style-nits
+
+# おすすめのオプション
+recommendations:
+  # セキュリティのベストプラクティス
+  security:
+    enabled: true
+    priority: "high"
+
+  # パフォーマンスの最適化
+  performance:
+    enabled: true
+    priority: "medium"
+
+  # コードの可読性向上
+  readability:
+    enabled: true
+    priority: "medium"
+
+  # アーキテクチャの改善提案
+  architecture:
+    enabled: true
+    priority: "low"
+
+  # 依存関係の管理
+  dependencies:
+    enabled: true
+    priority: "medium"
+
+# 除外設定
+exclude:
+  - "node_modules/**"
+  - "dist/**"
+  - "build/**"
+  - "*.min.js"
+  - "*.min.css"
+  - "package-lock.json"
+  - "yarn.lock"
+
+# 通知設定
+notifications:
+  # レビュー完了時の通知
+  review_complete: true
+
+  # 重要な問題発見時の通知
+  critical_issues: true
+
+  # セキュリティ問題の通知
+  security_issues: true
+
+# カスタムルール
+custom_rules:
+  # 日本語コメントの推奨
+  japanese_comments:
+    enabled: true
+    message: "重要なロジックには日本語でのコメントを追加することをお勧めします"
+
+  # エラーハンドリングの確認
+  error_handling:
+    enabled: true
+    message: "適切なエラーハンドリングが実装されているか確認してください"
+
+  # ログ出力の確認
+  logging:
+    enabled: true
+    message: "デバッグ用のログ出力が適切に実装されているか確認してください"
+
+# レビューテンプレート
+review_template:
+  title: "コードレビュー - {repository_name}"
+  sections:
+    - "概要"
+    - "変更内容"
+    - "改善点"
+    - "セキュリティチェック"
+    - "パフォーマンス"
+    - "テスト"
+    - "ドキュメント"
+    - "その他の推奨事項"
+
+# 日本語レビューを確実に有効にする追加設定
+settings:
+  # レビュー言語の強制設定
+  force_language: "ja"
+
+  # レビューコメントの言語
+  comment_language: "ja"
+
+  # レビューレポートの言語
+  report_language: "ja"
+
+  # 日本語でのフィードバック
+  feedback_language: "ja"
+
+# CodeRabbit固有の設定
+code_rabbit:
+  # レビュー言語の設定
+  review_language: "ja"
+
+  # コメント言語の設定
+  comment_language: "ja"
+
+  # フィードバック言語の設定
+  feedback_language: "ja"
+
+  # 日本語でのレビューを強制
+  force_japanese: true
+
+  # レビューテンプレートの言語
+  template_language: "ja"
