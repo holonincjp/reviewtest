@@ -71,6 +71,16 @@
                         <option value="approved">承認済み</option>
                         <option value="rejected">却下</option>
                     </select>
+                    <select id="sort-filter">
+                        <option value="date-desc">作成日（新しい順）</option>
+                        <option value="date-asc">作成日（古い順）</option>
+                        <option value="author-asc">作成者（A-Z）</option>
+                        <option value="author-desc">作成者（Z-A）</option>
+                        <option value="reviewer-asc">レビュー者（A-Z）</option>
+                        <option value="reviewer-desc">レビュー者（Z-A）</option>
+                        <option value="status-asc">ステータス（A-Z）</option>
+                        <option value="status-desc">ステータス（Z-A）</option>
+                    </select>
                     <input type="text" id="search-input" placeholder="PRタイトルで検索...">
                     <button id="export-btn" class="btn btn-secondary">エクスポート</button>
                     <button id="clear-search-btn" class="btn btn-outline">検索クリア</button>
@@ -82,6 +92,7 @@
                                 <th>PR番号</th>
                                 <th>タイトル</th>
                                 <th>作成者</th>
+                                <th>レビュー者</th>
                                 <th>ステータス</th>
                                 <th>作成日</th>
                                 <th>アクション</th>

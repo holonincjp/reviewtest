@@ -4,6 +4,7 @@ const samplePRs = [
     id: 1,
     title: "ユーザー認証機能の追加",
     author: "田中太郎",
+    reviewer: "佐藤花子",
     status: "pending",
     createdAt: "2025-01-15",
     description: "JWTを使用したユーザー認証システムを実装"
@@ -12,6 +13,7 @@ const samplePRs = [
     id: 2,
     title: "レスポンシブデザインの改善",
     author: "佐藤花子",
+    reviewer: "田中太郎",
     status: "approved",
     createdAt: "2025-01-14",
     description: "モバイルデバイスでの表示を最適化"
@@ -20,6 +22,7 @@ const samplePRs = [
     id: 3,
     title: "パフォーマンス最適化",
     author: "鈴木一郎",
+    reviewer: "高橋美咲",
     status: "rejected",
     createdAt: "2025-01-13",
     description: "データベースクエリの最適化とキャッシュの実装"
@@ -28,6 +31,7 @@ const samplePRs = [
     id: 4,
     title: "テストカバレッジの向上",
     author: "高橋美咲",
+    reviewer: "伊藤健太",
     status: "pending",
     createdAt: "2025-01-12",
     description: "ユニットテストとE2Eテストの追加"
@@ -36,6 +40,7 @@ const samplePRs = [
     id: 5,
     title: "セキュリティ強化",
     author: "伊藤健太",
+    reviewer: "山田次郎",
     status: "approved",
     createdAt: "2025-01-11",
     description: "SQLインジェクション対策とXSS対策の実装"
@@ -44,6 +49,7 @@ const samplePRs = [
     id: 6,
     title: "ログ機能の実装",
     author: "山田次郎",
+    reviewer: "中村花子",
     status: "reviewed",
     createdAt: "2025-01-10",
     description: "アプリケーションログの収集と分析機能を追加"
@@ -52,6 +58,7 @@ const samplePRs = [
     id: 7,
     title: "API仕様書の更新",
     author: "中村花子",
+    reviewer: "佐々木健太",
     status: "reviewed",
     createdAt: "2025-01-09",
     description: "REST APIの仕様書を最新版に更新しまた"
@@ -60,6 +67,7 @@ const samplePRs = [
     id: 8,
     title: "データベース設計の見直し",
     author: "佐々木健太",
+    reviewer: "山田太郎",
     status: "reviewed",
     createdAt: "2025-01-08",
     description: "パフォーマンス向上のためテーブル構造を最適化"
@@ -68,6 +76,7 @@ const samplePRs = [
     id: 9,
     title: "ユーザーインターフェースの改善",
     author: "山田太郎",
+    reviewer: "田中花子",
     status: "pending",
     createdAt: "2025-01-20",
     description: "ユーザビリティを向上させるためのUI改善"
@@ -76,6 +85,7 @@ const samplePRs = [
     id: 10,
     title: "APIエンドポイントの追加",
     author: "田中花子",
+    reviewer: "鈴木次郎",
     status: "approved",
     createdAt: "2025-01-18",
     description: "新しい機能のためのAPIエンドポイントを実装"
@@ -84,6 +94,7 @@ const samplePRs = [
     id: 11,
     title: "セキュリティパッチの適用",
     author: "鈴木次郎",
+    reviewer: "高橋三郎",
     status: "reviewed",
     createdAt: "2025-01-16",
     description: "既知の脆弱性に対するセキュリティパッチを適用"
@@ -92,6 +103,7 @@ const samplePRs = [
     id: 12,
     title: "パフォーマンステストの追加",
     author: "高橋三郎",
+    reviewer: "佐藤四郎",
     status: "pending",
     createdAt: "2025-01-14",
     description: "システムのパフォーマンスを測定するテストを追加"
@@ -100,6 +112,7 @@ const samplePRs = [
     id: 13,
     title: "ドキュメントの更新",
     author: "佐藤四郎",
+    reviewer: "伊藤五郎",
     status: "approved",
     createdAt: "2024-12-28",
     description: "API仕様書とユーザーマニュアルを最新版に更新"
@@ -108,6 +121,7 @@ const samplePRs = [
     id: 14,
     title: "バグ修正: ログイン機能",
     author: "伊藤五郎",
+    reviewer: "中村六郎",
     status: "reviewed",
     createdAt: "2024-12-25",
     description: "ログイン時の認証エラーを修正"
@@ -116,6 +130,7 @@ const samplePRs = [
     id: 15,
     title: "データベースマイグレーション",
     author: "中村六郎",
+    reviewer: "田中太郎",
     status: "approved",
     createdAt: "2024-12-22",
     description: "新しいテーブル構造へのデータベースマイグレーション"
@@ -192,6 +207,7 @@ const navLinks = document.querySelectorAll('.nav-link');
 const sections = document.querySelectorAll('.section');
 const prTableBody = document.getElementById('pr-table-body');
 const statusFilter = document.getElementById('status-filter');
+const sortFilter = document.getElementById('sort-filter');
 const searchInput = document.getElementById('search-input');
 const reviewForm = document.getElementById('review-form-element');
 const ratingStars = document.querySelectorAll('.star');
@@ -274,6 +290,7 @@ function renderPRTable(prs) {
                 <br><small>${pr.description}</small>
             </td>
             <td>${pr.author}</td>
+            <td>${pr.reviewer || '-'}</td>
             <td><span class="status-badge status-${pr.status}">${getStatusText(pr.status)}</span></td>
             <td>${pr.createdAt}</td>
             <td>
@@ -304,6 +321,10 @@ if (statusFilter) {
   statusFilter.addEventListener('change', filterPRs);
 }
 
+if (sortFilter) {
+  sortFilter.addEventListener('change', filterPRs);
+}
+
 if (searchInput) {
   searchInput.addEventListener('input', (e) => {
     filterPRs();
@@ -319,6 +340,7 @@ if (searchInput) {
 
 function filterPRs() {
   const statusValue = statusFilter.value;
+  const sortValue = sortFilter.value;
   const searchValue = searchInput.value.toLowerCase();
 
   let filteredPRs = samplePRs;
@@ -333,11 +355,51 @@ function filterPRs() {
     filteredPRs = filteredPRs.filter(pr =>
       pr.title.toLowerCase().includes(searchValue) ||
       pr.description.toLowerCase().includes(searchValue) ||
-      pr.author.toLowerCase().includes(searchValue)
+      pr.author.toLowerCase().includes(searchValue) ||
+      (pr.reviewer && pr.reviewer.toLowerCase().includes(searchValue))
     );
   }
 
+  // ソート機能
+  if (sortValue) {
+    filteredPRs = sortPRs(filteredPRs, sortValue);
+  }
+
   renderPRTable(filteredPRs);
+}
+
+// PRソート機能
+function sortPRs(prs, sortType) {
+  const sortedPRs = [...prs];
+
+  switch (sortType) {
+    case 'date-desc':
+      return sortedPRs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    case 'date-asc':
+      return sortedPRs.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    case 'author-asc':
+      return sortedPRs.sort((a, b) => a.author.localeCompare(b.author, 'ja'));
+    case 'author-desc':
+      return sortedPRs.sort((a, b) => b.author.localeCompare(a.author, 'ja'));
+    case 'reviewer-asc':
+      return sortedPRs.sort((a, b) => {
+        const reviewerA = a.reviewer || '';
+        const reviewerB = b.reviewer || '';
+        return reviewerA.localeCompare(reviewerB, 'ja');
+      });
+    case 'reviewer-desc':
+      return sortedPRs.sort((a, b) => {
+        const reviewerA = a.reviewer || '';
+        const reviewerB = b.reviewer || '';
+        return reviewerB.localeCompare(reviewerA, 'ja');
+      });
+    case 'status-asc':
+      return sortedPRs.sort((a, b) => getStatusText(a.status).localeCompare(getStatusText(b.status), 'ja'));
+    case 'status-desc':
+      return sortedPRs.sort((a, b) => getStatusText(b.status).localeCompare(getStatusText(a.status), 'ja'));
+    default:
+      return sortedPRs;
+  }
 }
 
 // レビュー機能
@@ -469,7 +531,7 @@ function closePRModal() {
 function showTimeComparisonGraph() {
   const timeGraphModal = document.getElementById('time-graph-modal');
   timeGraphModal.style.display = 'block';
-  
+
   // 簡単なグラフを描画（Canvas使用）
   drawTimeComparisonChart();
 }
@@ -484,26 +546,26 @@ function closeTimeGraphModal() {
 function drawTimeComparisonChart() {
   const canvas = document.getElementById('timeChart');
   if (!canvas) return;
-  
+
   const ctx = canvas.getContext('2d');
   const width = canvas.width;
   const height = canvas.height;
-  
+
   // 背景をクリア
   ctx.clearRect(0, 0, width, height);
-  
+
   // ダミーデータ
   const data = {
     labels: ['1週目', '2週目', '3週目', '4週目'],
     currentMonth: [2.1, 2.3, 2.2, 2.4],
     previousMonth: [2.8, 2.9, 2.7, 2.8]
   };
-  
+
   const padding = 60;
   const chartWidth = width - padding * 2;
   const chartHeight = height - padding * 2;
   const barWidth = chartWidth / (data.labels.length * 3);
-  
+
   // グリッド線を描画
   ctx.strokeStyle = '#e0e0e0';
   ctx.lineWidth = 1;
@@ -514,28 +576,28 @@ function drawTimeComparisonChart() {
     ctx.lineTo(width - padding, y);
     ctx.stroke();
   }
-  
+
   // データを描画
   data.labels.forEach((label, index) => {
     const x = padding + (chartWidth / data.labels.length) * index + chartWidth / (data.labels.length * 2);
-    
+
     // 今月のデータ（青）
     const currentHeight = (data.currentMonth[index] / 3) * chartHeight;
     ctx.fillStyle = '#667eea';
     ctx.fillRect(x - barWidth, padding + chartHeight - currentHeight, barWidth, currentHeight);
-    
+
     // 先月のデータ（グレー）
     const previousHeight = (data.previousMonth[index] / 3) * chartHeight;
     ctx.fillStyle = '#6c757d';
     ctx.fillRect(x, padding + chartHeight - previousHeight, barWidth, previousHeight);
-    
+
     // ラベル
     ctx.fillStyle = '#333';
     ctx.font = '12px Arial';
     ctx.textAlign = 'center';
     ctx.fillText(label, x, height - 20);
   });
-  
+
   // Y軸ラベル
   ctx.fillStyle = '#666';
   ctx.font = '10px Arial';
@@ -544,7 +606,7 @@ function drawTimeComparisonChart() {
     const y = padding + (chartHeight / 3) * i;
     ctx.fillText(`${3 - i}時間`, padding - 10, y + 4);
   }
-  
+
   // 凡例
   ctx.fillStyle = '#667eea';
   ctx.fillRect(width - 150, 20, 15, 15);
@@ -552,7 +614,7 @@ function drawTimeComparisonChart() {
   ctx.font = '12px Arial';
   ctx.textAlign = 'left';
   ctx.fillText('今月', width - 130, 32);
-  
+
   ctx.fillStyle = '#6c757d';
   ctx.fillRect(width - 150, 40, 15, 15);
   ctx.fillStyle = '#333';
@@ -1249,6 +1311,9 @@ function clearSearch() {
   }
   if (statusFilter) {
     statusFilter.value = 'all';
+  }
+  if (sortFilter) {
+    sortFilter.value = 'date-desc';
   }
   filterPRs();
   showNotification('検索条件がクリアされました', 'info');
