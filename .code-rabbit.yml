@@ -1,60 +1,30 @@
 # CodeRabbit Configuration File
-# 日本語でのレビューとおすすめのオプションを含む設定
+# シンプルで確実に動作する設定
 
 # 基本設定
 language: "ja"
 review_style: "friendly"
 auto_approve: false
 
-# レビュー設定
+# レビュー対象ファイル
 review:
-  languages: ["html", "js"] # JSONに合わせて明示的に指定
-  diff_only: true # 差分のみ対象
-  mode: quick # 短時間レビュー（目安5分）
+  languages: ["html", "javascript", "css"]
+  diff_only: false
+  mode: "standard"
   checks:
     html:
-      - h1-duplicate
-      - tag-structure
-      - attribute-quotes # JSONで追加されていた項目
-      - id-duplicate
-      - alt-attribute
-      - typo
-    js:
-      - syntax-error
-      - undefined-variable
-      - no-var
-      - infinite-loop
-      - console-log
-      - runtime-error
-  runtime:
-    js:
-      checkInBrowser: true # 実ブラウザでの簡易実行確認
-      entryPoint: "./dist/index.html"
-  performance:
-    maxFiles: 50 # JSONに合わせた上限値
-  skip:
-    - css
-    - naming-conventions
-    - micro-optimizations
-    - style-nits
-
-# おすすめのオプション
-recommendations:
-  security:
-    enabled: true
-    priority: "high"
-  performance:
-    enabled: true
-    priority: "medium"
-  readability:
-    enabled: true
-    priority: "medium"
-  architecture:
-    enabled: true
-    priority: "low"
-  dependencies:
-    enabled: true
-    priority: "medium"
+      - "tag-structure"
+      - "id-duplicate"
+      - "alt-attribute"
+      - "typo"
+    javascript:
+      - "syntax-error"
+      - "undefined-variable"
+      - "console-log"
+      - "runtime-error"
+    css:
+      - "syntax-error"
+      - "unused-selectors"
 
 # 除外設定
 exclude:
@@ -63,51 +33,8 @@ exclude:
   - "build/**"
   - "*.min.js"
   - "*.min.css"
-  - "package-lock.json"
-  - "yarn.lock"
 
 # 通知設定
 notifications:
   review_complete: true
   critical_issues: true
-  security_issues: true
-
-# カスタムルール
-custom_rules:
-  japanese_comments:
-    enabled: true
-    message: "重要なロジックには日本語でのコメントを追加することをお勧めします"
-  error_handling:
-    enabled: true
-    message: "適切なエラーハンドリングが実装されているか確認してください"
-  logging:
-    enabled: true
-    message: "デバッグ用のログ出力が適切に実装されているか確認してください"
-
-# レビューテンプレート
-review_template:
-  title: "コードレビュー - {repository_name}"
-  sections:
-    - "概要"
-    - "変更内容"
-    - "改善点"
-    - "セキュリティチェック"
-    - "パフォーマンス"
-    - "テスト"
-    - "ドキュメント"
-    - "その他の推奨事項"
-
-# 日本語レビューを確実に有効にする追加設定
-settings:
-  force_language: "ja"
-  comment_language: "ja"
-  report_language: "ja"
-  feedback_language: "ja"
-
-# CodeRabbit固有の設定
-code_rabbit:
-  review_language: "ja"
-  comment_language: "ja"
-  feedback_language: "ja"
-  force_japanese: true
-  template_language: "ja"
