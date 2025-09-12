@@ -31,25 +31,41 @@
             <section id="dashboard" class="section active">
                 <h2>ダッシュボード</h2>
                 <div class="dashboard-grid">
-                    <div class="card">
+                    <div class="card clickable-card" onclick="filterByStatus('pending')">
                         <h3>レビュー待ち</h3>
                         <div class="number">5</div>
                         <p>件のPRがレビュー待ちです</p>
                     </div>
-                    <div class="card">
+                    <div class="card clickable-card" onclick="filterByStatus('completed')">
                         <h3>完了済み</h3>
                         <div class="number">12</div>
                         <p>件のレビューが完了しています</p>
                     </div>
-                    <div class="card">
+                    
+                    <div class="card clickable-card" onclick="showTimeComparisonGraph()">
                         <h3>平均時間</h3>
                         <div class="number">2.5</div>
                         <p>時間でレビュー完了</p>
                     </div>
-                    <div class="card">
+                    <div class="card clickable-card" onclick="filterByMonth('current')">
                         <h3>今月作成</h3>
                         <div class="number">8</div>
                         <p>件のPRが作成されました</p>
+                    </div>
+                    <div class="card clickable-card" onclick="filterByMonth('previous')">
+                        <h3>先月作成</h3>
+                        <div class="number">15</div>
+                        <p>件のPRが作成されまた</p>
+                    </div>
+                    <div class="card clickable-card" onclick="showTeamStats()">
+                        <h3>チーム統計</h3>
+                        <div class="number">8</div>
+                        <p>人のメンバーが活動中</p>
+                    </div>
+                    <div class="card clickable-card" onclick="showBugReport()">
+                        <h3>バグレポート</h3>
+                        <div class="number">3</div>
+                        <p>件のバグが報告されています</p>
                     </div>
                 </div>
             </section>
@@ -61,8 +77,19 @@
                     <select id="status-filter">
                         <option value="all">すべてのステータス</option>
                         <option value="pending">レビュー待ち</option>
+                        <option value="reviewed">レビュー済み</option>
                         <option value="approved">承認済み</option>
                         <option value="rejected">却下</option>
+                    </select>
+                    <select id="sort-filter">
+                        <option value="date-desc">作成日（新しい順）</option>
+                        <option value="date-asc">作成日（古い順）</option>
+                        <option value="author-asc">作成者（A-Z）</option>
+                        <option value="author-desc">作成者（Z-A）</option>
+                        <option value="reviewer-asc">レビュー者（A-Z）</option>
+                        <option value="reviewer-desc">レビュー者（Z-A）</option>
+                        <option value="status-asc">ステータス（A-Z）</option>
+                        <option value="status-desc">ステータス（Z-A）</option>
                     </select>
                     <input type="text" id="search-input" placeholder="PRタイトルで検索...">
                     <button id="export-btn" class="btn btn-secondary">エクスポート</button>
@@ -75,6 +102,7 @@
                                 <th>PR番号</th>
                                 <th>タイトル</th>
                                 <th>作成者</th>
+                                <th>レビュー者</th>
                                 <th>ステータス</th>
                                 <th>作成日</th>
                                 <th>アクション</th>
@@ -167,6 +195,7 @@
                     </div>
                     <div class="form-actions">
                         <button type="button" class="btn btn-secondary" onclick="saveAsDraft()">下書き保存</button>
+                        <button type="button" class="btn btn-danger" onclick="deleteDraft()">下書き削除</button>
                         <button type="submit" class="btn btn-primary">PRを作成</button>
                     </div>
                 </form>
@@ -175,6 +204,26 @@
             <!-- レビューフォームセクション -->
             <section id="review-form" class="section">
                 <h2>レビューフォーム</h2>
+                
+                <!-- レビュー内容確認エリア -->
+                <div id="review-display" class="review-display" style="display: none;">
+                    <h3>レビュー内容</h3>
+                    <div class="review-info">
+                        <p><strong>PR番号:</strong> <span id="display-pr-id"></span></p>
+                        <p><strong>レビュアー:</strong> <span id="display-reviewer"></span></p>
+                        <p><strong>レビュー日:</strong> <span id="display-review-date"></span></p>
+                        <p><strong>評価スコア:</strong> <span id="display-score"></span></p>
+                        <p><strong>レビュー結果:</strong> <span id="display-status"></span></p>
+                        <p><strong>レビューコメント:</strong></p>
+                        <div id="display-comment" class="review-comment-box"></div>
+                    </div>
+                    <div class="button-group">
+                        <button type="button" class="btn btn-secondary" onclick="showReviewForm()">新規レビュー作成</button>
+                        <button type="button" class="btn btn-outline" onclick="backToPRList()">一覧に戻る</button>
+                    </div>
+                </div>
+                
+                <!-- レビュー作成フォーム -->
                 <form id="review-form-element" class="form">
                     <div class="form-group">
                         <label for="pr-id">PR番号</label>
@@ -207,7 +256,10 @@
                             <span class="star" data-rating="5" role="button" tabindex="0" aria-label="5点">★</span>
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-primary">レビューを送信</button>
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-primary">レビューを送信</button>
+                        <button type="button" class="btn btn-outline" onclick="backToPRList()">一覧に戻る</button>
+                    </div>
                 </form>
             </section>
         </div>
@@ -218,6 +270,82 @@
         <div class="modal-content">
             <span class="close">&times;</span>
             <div id="modal-content"></div>
+        </div>
+    </div>
+
+    <!-- 時間比較グラフモーダル -->
+    <div id="time-graph-modal" class="modal">
+        <div class="modal-content graph-modal">
+            <span class="close">&times;</span>
+            <h2>レビュー時間比較グラフ</h2>
+            <div id="time-graph-content">
+                <canvas id="timeChart" width="600" height="400"></canvas>
+            </div>
+            <div class="graph-stats">
+                <div class="stat-item">
+                    <span class="stat-label">今月の平均:</span>
+                    <span class="stat-value">2.3時間</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">先月の平均:</span>
+                    <span class="stat-value">2.8時間</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">改善率:</span>
+                    <span class="stat-value improvement">+17.9%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- チーム統計モーダル -->
+    <div id="team-stats-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>チーム統計</h2>
+            <div class="team-stats-content">
+                <div class="team-member">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM2NjdlZWEiLz4KPHN2ZyB4PSIxMCIgeT0iMTAiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJ3aGl0ZSI+CjxwYXRoIGQ9Ik0xMiAxMmMyLjIxIDAgNC0xLjc5IDQtNHMtMS43OS00LTQtNC00IDEuNzktNCA0IDEuNzkgNCA0IDR6bTAgMmMtMi42NyAwLTggMS4zNC04IDR2MmgxNnYtMmMwLTIuNjYtNS4zMy00LTgtNHoiLz4KPC9zdmc+Cjwvc3ZnPgo=" alt="田中太郎" class="member-avatar">
+                    <div class="member-info">
+                        <h3>田中太郎</h3>
+                        <p>レビュー数: 15件</p>
+                        <p>平均時間: 2.1時間</p>
+                    </div>
+                </div>
+                <div class="team-member">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNlOTYzZTciLz4KPHN2ZyB4PSIxMCIgeT0iMTAiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJ3aGl0ZSI+CjxwYXRoIGQ9Ik0xMiAxMmMyLjIxIDAgNC0xLjc5IDQtNHMtMS43OS00LTQtNC00IDEuNzktNCA0IDEuNzkgNCA0IDR6bTAgMmMtMi42NyAwLTggMS4zNC04IDR2MmgxNnYtMmMwLTIuNjYtNS4zMy00LTgtNHoiLz4KPC9zdmc+Cjwvc3ZnPgo=" alt="佐藤花子" class="member-avatar">
+                    <div class="member-info">
+                        <h3>佐藤花子</h3>
+                        <p>レビュー数: 12件</p>
+                        <p>平均時間: 1.8時間</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- バグレポートモーダル -->
+    <div id="bug-report-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>バグレポート</h2>
+            <div class="bug-list">
+                <div class="bug-item high-priority">
+                    <h3>🚨 高優先度</h3>
+                    <p>ログイン機能でエラーが発生</p>
+                    <span class="bug-date">2025-01-20</span>
+                </div>
+                <div class="bug-item medium-priority">
+                    <h3>⚠️ 中優先度</h3>
+                    <p>モバイル表示が崩れる</p>
+                    <span class="bug-date">2025-01-19</span>
+                </div>
+                <div class="bug-item low-priority">
+                    <h3>ℹ️ 低優先度</h3>
+                    <p>フォントサイズが小さい</p>
+                    <span class="bug-date">2025-01-18</span>
+                </div>
+            </div>
         </div>
     </div>
 
