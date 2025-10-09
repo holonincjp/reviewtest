@@ -484,6 +484,9 @@ function saveAsDraft() {
 
 // ページ読み込み時の初期化
 document.addEventListener('DOMContentLoaded', () => {
+    // 時計を初期化
+    initClock();
+    
     // ダッシュボードの統計を更新
     updateDashboardStats();
     
@@ -839,4 +842,25 @@ function initProgressBar() {
             }, 500);
         });
     }
+}
+
+// 時計機能
+function updateClock() {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const timeString = `${hours}:${minutes}:${seconds}`;
+    
+    // すべてのセクションの時計を更新
+    const clocks = document.querySelectorAll('.section-clock');
+    clocks.forEach(clock => {
+        clock.textContent = timeString;
+    });
+}
+
+// 時計を初期化して1秒ごとに更新
+function initClock() {
+    updateClock(); // 初回表示
+    setInterval(updateClock, 1000); // 1秒ごとに更新
 }

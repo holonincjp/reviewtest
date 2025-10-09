@@ -166,6 +166,26 @@ body.dark-mode .close:hover {
     font-size: 2rem;
 }
 
+/* 時計スタイル */
+.section-clock {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #667eea;
+    text-align: right;
+    margin-bottom: 1rem;
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.1em;
+}
+
+body.dark-mode .section-clock {
+    background: linear-gradient(135deg, #2d2d2d 0%, #3d3d3d 100%);
+    color: #667eea;
+}
+
 /* ダッシュボード */
 .dashboard-grid {
     display: grid;
