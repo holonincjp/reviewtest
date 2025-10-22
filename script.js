@@ -336,12 +336,26 @@ function updateDashboardStats() {
     const approvedCount = samplePRs.filter(pr => pr.status === 'approved').length;
     const rejectedCount = samplePRs.filter(pr => pr.status === 'rejected').length;
     
+    // 今月作成されたPRの数をカウント
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+    
+    const thisMonthCount = samplePRs.filter(pr => {
+        const prDate = new Date(pr.createdAt);
+        const prYear = prDate.getFullYear();
+        const prMonth = prDate.getMonth() + 1;
+        return prYear === currentYear && prMonth === currentMonth;
+    }).length;
+    
     // 統計カードの更新
     const pendingElement = document.querySelector('.card:nth-child(1) .number');
     const completedElement = document.querySelector('.card:nth-child(2) .number');
+    const thisMonthElement = document.querySelector('.card:nth-child(4) .number');
     
     if (pendingElement) pendingElement.textContent = pendingCount;
     if (completedElement) completedElement.textContent = approvedCount + rejectedCount;
+    if (thisMonthElement) thisMonthElement.textContent = thisMonthCount;
 }
 
 // PR作成フォームの初期化
