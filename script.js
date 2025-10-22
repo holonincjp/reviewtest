@@ -484,11 +484,17 @@ function saveAsDraft() {
 
 // ページ読み込み時の初期化
 document.addEventListener('DOMContentLoaded', () => {
+    // イベントリスナーのセットアップ
+    setupEventListeners();
+    
     // ダッシュボードの統計を更新
     updateDashboardStats();
     
     // デフォルトでダッシュボードを表示
     showSection('dashboard');
+    
+    // 進捗バーの初期化
+    initProgressBar();
     
     // テーマの復元
     const savedTheme = localStorage.getItem('theme');
